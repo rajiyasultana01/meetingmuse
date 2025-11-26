@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Minimal black and white palette */
+    --background: 0 0% 100%; /* #FFFFFF - pure white */
+    --foreground: 0 0% 0%; /* #000000 - black */
+
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 0 0% 0%; /* black */
+
+    --popover: 0 0% 100%; /* white */
+    --popover-foreground: 0 0% 0%; /* black */
+
+    --primary: 0 0% 0%; /* black */
+    --primary-foreground: 0 0% 100%; /* white */
+
+    --secondary: 0 0% 96%; /* light gray */
+    --secondary-foreground: 0 0% 0%; /* black */
+
+    --muted: 0 0% 96%; /* light gray */
+    --muted-foreground: 0 0% 45%; /* medium gray */
+
+    --accent: 0 0% 0%; /* black */
+    --accent-foreground: 0 0% 100%; /* white */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%; /* light gray border */
+    --input: 0 0% 94%; /* light gray input */
+    --ring: 0 0% 0%; /* black */
+
+    --radius: 0.75rem;
+
+    /* Shadows */
+    --shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-elevated: 0 12px 48px rgba(0, 0, 0, 0.15);
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%; /* white */
+    --sidebar-foreground: 0 0% 30%; /* dark gray */
+    --sidebar-primary: 0 0% 0%; /* black */
+    --sidebar-primary-foreground: 0 0% 100%; /* white */
+    --sidebar-accent: 0 0% 96%; /* light gray */
+    --sidebar-accent-foreground: 0 0% 0%; /* black */
+    --sidebar-border: 0 0% 90%; /* light gray border */
+    --sidebar-ring: 0 0% 0%; /* black */
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* black */
+    --foreground: 0 0% 100%; /* white */
+
+    --card: 0 0% 10%; /* very dark gray */
+    --card-foreground: 0 0% 100%; /* white */
+
+    --popover: 0 0% 10%; /* very dark gray */
+    --popover-foreground: 0 0% 100%; /* white */
+
+    --primary: 0 0% 100%; /* white */
+    --primary-foreground: 0 0% 0%; /* black */
+
+    --secondary: 0 0% 18%; /* dark gray */
+    --secondary-foreground: 0 0% 100%; /* white */
+
+    --muted: 0 0% 18%; /* dark gray */
+    --muted-foreground: 0 0% 65%; /* light gray */
+
+    --accent: 0 0% 100%; /* white */
+    --accent-foreground: 0 0% 0%; /* black */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%; /* dark gray border */
+    --input: 0 0% 18%; /* dark gray input */
+    --ring: 0 0% 100%; /* white */
+    
+    --sidebar-background: 0 0% 10%; /* very dark gray */
+    --sidebar-foreground: 0 0% 75%; /* light gray */
+    --sidebar-primary: 0 0% 100%; /* white */
+    --sidebar-primary-foreground: 0 0% 0%; /* black */
+    --sidebar-accent: 0 0% 18%; /* dark gray */
+    --sidebar-accent-foreground: 0 0% 100%; /* white */
+    --sidebar-border: 0 0% 18%; /* dark gray border */
+    --sidebar-ring: 0 0% 100%; /* white */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Manrope', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Crimson Pro', serif;
+    font-weight: 600;
+  }
+}
