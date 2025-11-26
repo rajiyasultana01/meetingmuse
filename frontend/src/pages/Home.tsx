@@ -1,11 +1,56 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Clock, Users, Brain, Video, FileText, BarChart3, ArrowRight } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sparkles, Clock, Users, Brain, Video, FileText, BarChart3, ArrowRight, LogOut, User, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import heroImage from "@/assets/hero-background.jpg";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
+  const getDisplayName = () => {
+    if (user?.displayName) {
+      return user.displayName;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
+  };
+
+  const getInitials = () => {
+    if (user?.displayName) {
+      return user.displayName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
 
   const features = [
     {
@@ -51,14 +96,52 @@ export default function Home() {
       {/* Navigation */}
       <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">MeetingMind</h1>
+          <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate("/")}>
+            MeetingMind
+          </h1>
           <div className="flex gap-4">
-            <Button variant="ghost" onClick={() => navigate("/login")}>
-              Sign In
-            </Button>
-            <Button onClick={() => navigate("/login")} className="rounded-xl">
-              Get Started
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.photoURL || undefined} alt={getDisplayName()} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:inline">{getDisplayName()}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{getDisplayName()}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/userdashboard")}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => navigate("/login")}>
+                  Sign In
+                </Button>
+                <Button onClick={() => navigate("/login")} className="rounded-xl">
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </nav>

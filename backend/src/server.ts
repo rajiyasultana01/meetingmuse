@@ -47,6 +47,23 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'MeetingMind API',
+    version: '1.0.0',
+    status: 'running',
+    message: 'Welcome to MeetingMind API',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      meetings: '/api/meetings',
+      admin: '/api/admin',
+      external: '/api/external',
+    },
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({
