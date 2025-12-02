@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Upload, Loader2, FileVideo, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { meetingsAPI } from "@/lib/api";
 
 export default function SummarizeMeeting() {
   const [file, setFile] = useState<File | null>(null);
@@ -45,48 +45,66 @@ export default function SummarizeMeeting() {
     if (!file) return;
 
     setIsProcessing(true);
-    
-    try {
-      // Read file as base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      
-      reader.onload = async () => {
-        const base64Video = reader.result as string;
-        
-        // Call edge function to process video
-        const { data, error } = await supabase.functions.invoke('process-meeting-video', {
-          body: {
-            video: base64Video.split(',')[1], // Remove data URL prefix
-            fileName: file.name,
-          },
-        });
 
-        if (error) {
+    try {
+      // Create FormData
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('title', file.name.replace(/\.[^/.]+$/, '')); // Remove extension
+
+      // Upload to backend
+      const response = await meetingsAPI.upload(formData);
+      const meetingId = response.data.id;
+
+      toast({
+        title: "Video Uploaded",
+        description: "Processing started. This may take a few minutes...",
+      });
+
+      // Poll for completion
+      let attempts = 0;
+      const maxAttempts = 60; // 5 minutes max (5 seconds * 60)
+
+      const checkStatus = setInterval(async () => {
+        attempts++;
+
+        try {
+          const meetingResponse = await meetingsAPI.getById(meetingId);
+          const meeting = meetingResponse.data.meeting;
+
+          if (meeting.status === 'completed') {
+            clearInterval(checkStatus);
+            setIsProcessing(false);
+
+            // Get summary
+            const summaryData = meetingResponse.data.summary;
+            if (summaryData) {
+              setSummary(summaryData.summaryText);
+              toast({
+                title: "Success",
+                description: "Meeting summary generated successfully",
+              });
+            }
+          } else if (meeting.status === 'failed') {
+            clearInterval(checkStatus);
+            throw new Error(meeting.errorMessage || 'Processing failed');
+          } else if (attempts >= maxAttempts) {
+            clearInterval(checkStatus);
+            throw new Error('Processing timeout. Please check your dashboard.');
+          }
+        } catch (error) {
+          clearInterval(checkStatus);
           throw error;
         }
+      }, 5000); // Check every 5 seconds
 
-        if (data?.summary) {
-          setSummary(data.summary);
-          toast({
-            title: "Success",
-            description: "Meeting summary generated successfully",
-          });
-        }
-      };
-
-      reader.onerror = () => {
-        throw new Error("Failed to read file");
-      };
-      
     } catch (error: any) {
       console.error('Error processing video:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to process video. Please try again.",
+        description: error.response?.data?.error || error.message || "Failed to process video. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsProcessing(false);
     }
   };
