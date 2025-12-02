@@ -6,9 +6,9 @@ import { User } from '../models/User.js';
 // Load environment variables
 dotenv.config();
 
-const ADMIN_EMAIL = 'admin@gmail.com';
-const ADMIN_PASSWORD = 'admin1234';
-const ADMIN_NAME = 'Admin User';
+const ADMIN_EMAIL = 'admin@lexdatalabs.com';
+const ADMIN_PASSWORD = 'lexdatalabs';
+const ADMIN_NAME = 'LexDataLabs Admin';
 
 async function setupAdmin() {
   try {

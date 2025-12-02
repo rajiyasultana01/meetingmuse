@@ -36,8 +36,8 @@ app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '5gb' }));
+app.use(express.urlencoded({ extended: true, limit: '5gb' }));
 
 // Rate limiting
 const limiter = rateLimit({

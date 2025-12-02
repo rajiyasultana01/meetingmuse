@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const login = async (email: string, password: string) => {
+    console.log('Attempting login with:', { email, password: password ? '***' : 'missing' });
     await signInWithEmailAndPassword(auth, email, password);
   };
 

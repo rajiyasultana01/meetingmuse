@@ -2,13 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCRQNQkhEnHJR7S9p8wfHaVyXaLgt0AI2U",
+  authDomain: "meetingmuse-541a0.firebaseapp.com",
+  projectId: "meetingmuse-541a0",
+  storageBucket: "meetingmuse-541a0.firebasestorage.app",
+  messagingSenderId: "71333603744",
+  appId: "1:71333603744:web:ace4ec0c881c8e2785dcc5",
 };
+console.log('Firebase Config:', firebaseConfig);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
