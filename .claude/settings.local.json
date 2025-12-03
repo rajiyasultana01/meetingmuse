@@ -9,7 +9,21 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(npm run setup-admin:*)"
+      "Bash(npm run setup-admin:*)",
+      "Bash(where:*)",
+      "Bash(npx tsx:*)",
+      "Bash(curl:*)",
+      "Bash(dir:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(winget install:*)",
+      "Bash(powershell -Command \"Expand-Archive -Path ffmpeg.zip -DestinationPath . -Force\")",
+      "Bash(./ffmpeg-8.0.1-essentials_build/bin/ffmpeg.exe:*)",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)",
+      "Bash(git restore:*)",
+      "Bash(del nul:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []
