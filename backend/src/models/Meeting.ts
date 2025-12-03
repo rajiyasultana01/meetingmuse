@@ -8,6 +8,7 @@ export interface IMeeting extends Document {
   videoPath: string;
   videoUrl: string;
   thumbnailUrl?: string;
+  source: 'chrome-extension' | 'manual-upload';
   status: 'uploaded' | 'processing' | 'transcribing' | 'summarizing' | 'completed' | 'failed';
   errorMessage?: string;
   durationSeconds?: number;
@@ -47,6 +48,12 @@ const MeetingSchema = new Schema<IMeeting>(
     },
     thumbnailUrl: {
       type: String,
+    },
+    source: {
+      type: String,
+      enum: ['chrome-extension', 'manual-upload'],
+      required: true,
+      index: true,
     },
     status: {
       type: String,

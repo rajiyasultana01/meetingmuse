@@ -28,9 +28,10 @@ export const uploadMeeting = async (
       return;
     }
 
-    // Upload to Firebase Storage
+    // Temporarily skip Firebase Storage - use local path
     const firebasePath = `meetings/${user.firebaseUid}/${Date.now()}-${req.file.filename}`;
-    const videoUrl = await uploadToFirebase(localPath, firebasePath);
+    // const videoUrl = await uploadToFirebase(localPath, firebasePath);
+    const videoUrl = `http://localhost:5000/uploads/${req.file.filename}`; // Temporary local URL
 
     // Create meeting record
     const meeting = await Meeting.create({
@@ -38,8 +39,9 @@ export const uploadMeeting = async (
       firebaseUid: user.firebaseUid,
       title: title || req.file.originalname.replace(/\.[^/.]+$/, ''),
       description: description || '',
-      videoPath: firebasePath,
+      videoPath: localPath, // Use local path instead
       videoUrl,
+      source: 'manual-upload', // Manual video upload
       status: 'uploaded',
     });
 
@@ -72,11 +74,14 @@ export const getMeetings = async (
       return;
     }
 
-    const { status, limit = 20, offset = 0 } = req.query;
+    const { status, source, limit = 20, offset = 0 } = req.query;
 
     const query: any = { userId: user._id };
     if (status) {
       query.status = status;
+    }
+    if (source) {
+      query.source = source;
     }
 
     const meetings = await Meeting.find(query)

@@ -72,8 +72,8 @@ export const processMeetingVideo = async (
       status: 'completed',
     });
 
-    // Clean up local file
-    deleteLocalFile(localVideoPath);
+    // Don't delete local file - we're using it instead of Firebase Storage
+    // deleteLocalFile(localVideoPath);
 
     console.log(`Meeting ${meetingId} processed successfully`);
   } catch (error: any) {
@@ -85,8 +85,8 @@ export const processMeetingVideo = async (
       errorMessage: error.message,
     });
 
-    // Clean up local file
-    deleteLocalFile(localVideoPath);
+    // Don't delete local file on error either
+    // deleteLocalFile(localVideoPath);
 
     throw error;
   }

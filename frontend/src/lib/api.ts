@@ -51,7 +51,7 @@ export const meetingsAPI = {
     api.post('/meetings/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-  getAll: (params?: { status?: string; limit?: number; offset?: number }) =>
+  getAll: (params?: { status?: string; source?: string; limit?: number; offset?: number }) =>
     api.get('/meetings', { params }),
   getById: (id: string) => api.get(`/meetings/${id}`),
   delete: (id: string) => api.delete(`/meetings/${id}`),

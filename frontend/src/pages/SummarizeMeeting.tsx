@@ -26,11 +26,11 @@ export default function SummarizeMeeting() {
         return;
       }
       
-      // Check file size (max 100MB)
-      if (selectedFile.size > 100 * 1024 * 1024) {
+      // Check file size (max 5GB)
+      if (selectedFile.size > 5 * 1024 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please upload a video smaller than 100MB",
+          description: "Please upload a video smaller than 5GB",
           variant: "destructive",
         });
         return;
@@ -127,7 +127,7 @@ export default function SummarizeMeeting() {
             <div className="text-center">
               <h3 className="text-xl font-bold mb-2">Upload Meeting Video</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Supported formats: MP4, MOV, AVI (Max 100MB)
+                Supported formats: MP4, MOV, AVI (Max 5GB)
               </p>
             </div>
 

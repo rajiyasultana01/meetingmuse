@@ -8,7 +8,9 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/meetin
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+    });
     console.log('✅ MongoDB connected successfully');
 
     mongoose.connection.on('error', (error) => {
@@ -24,7 +26,9 @@ export const connectDatabase = async (): Promise<void> => {
     });
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error);
-    process.exit(1);
+    console.warn('⚠️  Server will start without MongoDB. Database operations will fail.');
+    // DON'T exit - let server start anyway for testing
+    // process.exit(1);
   }
 };
 

@@ -1,0 +1,47 @@
+# FFmpeg binaries
+ffmpeg-*/
+ffmpeg.exe
+ffmpeg
+ffprobe.exe
+ffprobe
+
+# Large media files
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.flv
+*.wmv
+*.webm
+*.m4v
+*.3gp
+
+# Audio files
+*.mp3
+*.wav
+*.aac
+*.ogg
+*.flac
+*.m4a
+*.wma
+
+# Compressed archives
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/

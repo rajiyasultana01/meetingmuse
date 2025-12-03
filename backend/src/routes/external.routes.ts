@@ -102,6 +102,7 @@ router.post(
         description: description || `External recording${externalId ? ` (ID: ${externalId})` : ''}`,
         videoPath: firebasePath,
         videoUrl: firebaseUrl,
+        source: 'chrome-extension', // From Chrome extension
         status: 'uploaded',
         durationSeconds: metadata?.duration,
       });
