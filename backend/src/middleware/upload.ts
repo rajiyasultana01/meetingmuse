@@ -22,12 +22,12 @@ const storage = multer.diskStorage({
 
 // File filter for video files
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimes = ['video/mp4', 'video/mov', 'video/avi', 'video/quicktime', 'video/x-msvideo'];
+  const allowedMimes = ['video/mp4', 'video/mov', 'video/avi', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
 
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only MP4, MOV, and AVI files are allowed.'));
+    cb(new Error('Invalid file type. Only MP4, MOV, AVI, and WebM files are allowed.'));
   }
 };
 

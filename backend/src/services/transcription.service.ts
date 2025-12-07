@@ -3,12 +3,20 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import dns from 'dns';
+
+// Fix DNS resolution issues by forcing Google DNS
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+} catch (e) {
+  console.error('Failed to apply DNS fix in transcription service:', e);
+}
 
 const execAsync = promisify(exec);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000, // 60 second timeout
+  timeout: 300000, // 5 minutes timeout (increased from 60s)
   maxRetries: 3, // Retry 3 times on network errors
 });
 
@@ -76,7 +84,7 @@ export const transcribeVideo = async (videoPath: string): Promise<TranscriptionR
     const response = await openai.audio.transcriptions.create({
       file: fileStream,
       model: 'whisper-1',
-      response_format: 'json',
+      response_format: 'verbose_json',
     });
 
     return {

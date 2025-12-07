@@ -6,6 +6,15 @@ import { User } from '../models/User.js';
 // Load environment variables
 dotenv.config();
 
+// Fix DNS resolution issues by forcing Google DNS
+import dns from 'dns';
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+  console.log('✅ Applied DNS Fix: Forced Google DNS');
+} catch (e) {
+  console.error('❌ Failed to apply DNS fix:', e);
+}
+
 const ADMIN_EMAIL = 'admin@lexdatalabs.com';
 const ADMIN_PASSWORD = 'lexdatalabs';
 const ADMIN_NAME = 'LexDataLabs Admin';
