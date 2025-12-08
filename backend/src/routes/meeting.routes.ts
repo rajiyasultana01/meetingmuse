@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   uploadMeeting,
   uploadMeetingFromExtension,
+  uploadMeetingFromExtensionAuth,
   getMeetings,
   getMeetingById,
   deleteMeeting,
@@ -13,6 +14,7 @@ const router = Router();
 
 router.post('/upload', authenticateUser, upload.single('video'), uploadMeeting);
 router.post('/upload-extension', verifyApiKey, upload.single('video'), uploadMeetingFromExtension);
+router.post('/upload-extension-auth', authenticateUser, upload.single('video'), uploadMeetingFromExtensionAuth);
 router.get('/', authenticateUser, getMeetings);
 router.get('/:id', authenticateUser, getMeetingById);
 router.delete('/:id', authenticateUser, deleteMeeting);

@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import Express, { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.js';
 import { Meeting } from '../models/Meeting.js';
 import { Transcript } from '../models/Transcript.js';
@@ -64,7 +64,7 @@ export const uploadMeeting = async (
 };
 
 export const uploadMeetingFromExtension = async (
-  req: Request,
+  req: Express.Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -89,6 +89,57 @@ export const uploadMeetingFromExtension = async (
     const meeting = await Meeting.create({
       userId: adminUser._id,
       firebaseUid: adminUser.firebaseUid,
+      title: title || `Extension Recording ${new Date().toLocaleString()}`,
+      description: 'Automatically uploaded from LexEye extension',
+      videoPath: localPath,
+      videoUrl,
+      source: 'chrome-extension',
+      status: 'uploaded',
+    });
+
+    // Start processing in background
+    processMeetingVideo(meeting._id.toString(), localPath).catch((error) => {
+      console.error('Background processing error:', error);
+    });
+
+    res.status(201).json({
+      id: meeting._id,
+      title: meeting.title,
+      status: meeting.status,
+      message: 'Meeting uploaded successfully from extension.',
+    });
+  } catch (error: any) {
+    console.error('Extension upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const uploadMeetingFromExtensionAuth = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No video file provided' });
+      return;
+    }
+
+    const { title } = req.body;
+    const localPath = req.file.path;
+
+    // Get user from database (authenticated via Firebase token)
+    const user = await User.findOne({ firebaseUid: req.user?.uid });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const videoUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+
+    // Create meeting record assigned to the authenticated user
+    const meeting = await Meeting.create({
+      userId: user._id,
+      firebaseUid: user.firebaseUid,
       title: title || `Extension Recording ${new Date().toLocaleString()}`,
       description: 'Automatically uploaded from LexEye extension',
       videoPath: localPath,
