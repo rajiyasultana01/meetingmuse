@@ -14,15 +14,15 @@ All API requests must include an API key in the headers:
 x-api-key: YOUR_API_SECRET_KEY
 ```
 
-The API secret is configured during setup via Supabase secrets.
+The API secret is configured in your backend `.env` file.
 
 ## Endpoint
 
 ```
-POST https://[your-project].supabase.co/functions/v1/api-receive-recording
+POST http://your-backend-url:5000/api/external/receive-recording
 ```
 
-Replace `[your-project]` with your Supabase project reference.
+Replace `your-backend-url` with your deployed backend URL (or use `localhost:5000` for local development).
 
 ## Request Format
 
@@ -64,7 +64,7 @@ x-api-key: YOUR_API_SECRET_KEY
 ### Example 1: Upload Base64-Encoded Video
 
 ```bash
-curl -X POST https://yhlsdvlihpejrjkdigdj.supabase.co/functions/v1/api-receive-recording \
+curl -X POST http://localhost:5000/api/external/receive-recording \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_SECRET_KEY" \
   -d '{
@@ -72,7 +72,7 @@ curl -X POST https://yhlsdvlihpejrjkdigdj.supabase.co/functions/v1/api-receive-r
     "fileName": "standup-2024-01-25.mp4",
     "title": "Daily Standup - Jan 25",
     "description": "Engineering team daily standup",
-    "userId": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "firebase-user-id",
     "metadata": {
       "duration": 900,
       "participants": ["Alice", "Bob", "Charlie"]
@@ -83,14 +83,14 @@ curl -X POST https://yhlsdvlihpejrjkdigdj.supabase.co/functions/v1/api-receive-r
 ### Example 2: Provide Video URL
 
 ```bash
-curl -X POST https://yhlsdvlihpejrjkdigdj.supabase.co/functions/v1/api-receive-recording \
+curl -X POST http://localhost:5000/api/external/receive-recording \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_SECRET_KEY" \
   -d '{
     "videoUrl": "https://example.com/recordings/meeting-123.mp4",
     "fileName": "meeting-123.mp4",
     "title": "Sprint Planning",
-    "userId": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "firebase-user-id",
     "externalId": "zoom-meeting-123"
   }'
 ```
@@ -109,7 +109,7 @@ def upload_meeting_recording(video_path, user_id, title):
         video_data = base64.b64encode(f.read()).decode('utf-8')
 
     # Prepare request
-    url = "https://yhlsdvlihpejrjkdigdj.supabase.co/functions/v1/api-receive-recording"
+    url = "http://localhost:5000/api/external/receive-recording"
     headers = {
         "Content-Type": "application/json",
         "x-api-key": "YOUR_API_SECRET_KEY"
@@ -119,7 +119,7 @@ def upload_meeting_recording(video_path, user_id, title):
         "video": video_data,
         "fileName": video_path.split('/')[-1],
         "title": title,
-        "userId": user_id,
+        "userId": user_id,  # Firebase user ID
         "metadata": {
             "uploadedBy": "python-script"
         }
@@ -140,7 +140,7 @@ def upload_meeting_recording(video_path, user_id, title):
 # Usage
 upload_meeting_recording(
     "/path/to/meeting.mp4",
-    "123e4567-e89b-12d3-a456-426614174000",
+    "firebase-user-id",
     "Team Sync - Jan 25"
 )
 ```
@@ -157,7 +157,7 @@ async function uploadMeeting(videoPath, userId, title) {
   const videoBase64 = videoBuffer.toString('base64');
 
   const response = await fetch(
-    'https://yhlsdvlihpejrjkdigdj.supabase.co/functions/v1/api-receive-recording',
+    'http://localhost:5000/api/external/receive-recording',
     {
       method: 'POST',
       headers: {
@@ -168,7 +168,7 @@ async function uploadMeeting(videoPath, userId, title) {
         video: videoBase64,
         fileName: videoPath.split('/').pop(),
         title: title,
-        userId: userId,
+        userId: userId,  // Firebase user ID
         metadata: {
           uploadedBy: 'nodejs-script'
         }
@@ -182,7 +182,7 @@ async function uploadMeeting(videoPath, userId, title) {
 }
 
 // Usage
-uploadMeeting('./meeting.mp4', 'user-uuid', 'Weekly Review')
+uploadMeeting('./meeting.mp4', 'firebase-user-id', 'Weekly Review')
   .then(result => console.log('Meeting uploaded:', result.meetingId))
   .catch(error => console.error('Error:', error));
 ```
@@ -213,8 +213,8 @@ uploadMeeting('./meeting.mp4', 'user-uuid', 'Weekly Review')
 Once a recording is submitted via the API:
 
 1. **Validation**: API key and request parameters are validated
-2. **Upload**: Video is uploaded to Supabase Storage
-3. **Meeting Record**: A meeting record is created in the database
+2. **Upload**: Video is uploaded to Firebase Storage and saved locally
+3. **Meeting Record**: A meeting record is created in MongoDB
 4. **Transcription**: OpenAI Whisper extracts the transcript
 5. **Cleaning**: Transcript is cleaned and normalized
 6. **Summarization**: Groq AI generates a comprehensive summary
@@ -224,16 +224,16 @@ The entire process typically takes 2-5 minutes depending on video length.
 
 ## Monitoring Processing Status
 
-You can query the meeting status using the Supabase client:
+You can query the meeting status using the backend API:
 
 ```javascript
-const { data } = await supabase
-  .from('meetings')
-  .select('*, transcripts(*), summaries(*)')
-  .eq('id', meetingId)
-  .single();
+// Using the frontend API client
+import { meetingsAPI } from './lib/api';
 
-console.log('Status:', data.status);
+const response = await meetingsAPI.getById(meetingId);
+const { meeting, transcript, summary } = response.data;
+
+console.log('Status:', meeting.status);
 // Possible values: 'uploaded', 'processing', 'transcribing', 'summarizing', 'completed', 'failed'
 ```
 
@@ -280,19 +280,20 @@ Process meeting recordings as part of your automated workflows.
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| "Unauthorized" | Invalid API key | Check x-api-key header |
-| "User not found" | Invalid userId | Verify user exists in system |
-| "Failed to upload video" | Storage issue | Check Supabase storage bucket |
+| "Unauthorized" | Invalid API key | Check x-api-key header matches backend .env |
+| "User not found" | Invalid userId | Verify Firebase user exists and is synced to MongoDB |
+| "Failed to upload video" | Storage issue | Check Firebase Storage permissions |
 | "Failed to download video" | Invalid URL | Verify videoUrl is accessible |
 | Timeout | Video too large | Compress or split the video |
 
 ## Support
 
 For integration support:
-1. Check function logs in Supabase Dashboard
-2. Verify API key is correct
+1. Check backend server logs (terminal or hosting platform logs)
+2. Verify API key is correct in backend `.env`
 3. Test with small sample video first
 4. Review error messages carefully
+5. Ensure MongoDB connection is active
 
 ---
 

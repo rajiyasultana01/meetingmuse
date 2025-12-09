@@ -5,25 +5,55 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Play, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MeetingReport } from "@/components/MeetingReport";
-import { supabase } from "@/integrations/supabase/client";
+import { meetingsAPI } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Tables } from "@/integrations/supabase/types";
 
-type Meeting = Tables<'meetings'>;
-type Transcript = Tables<'transcripts'>;
-type Summary = Tables<'summaries'>;
+interface Meeting {
+  _id: string;
+  title: string;
+  description?: string;
+  status: string;
+  videoUrl?: string;
+  videoPath?: string;
+  source: string;
+  durationSeconds?: number;
+  createdAt: string;
+  errorMessage?: string;
+}
 
-interface MeetingData extends Meeting {
-  transcripts?: Transcript | null;
-  summaries?: Summary | null;
+interface Transcript {
+  rawTranscript: string;
+  cleanedTranscript?: string;
+  language: string;
+  wordCount: number;
+}
+
+interface Summary {
+  summaryText: string;
+  keyPoints: string[];
+  actionItems: string[];
+  topics: string[];
+  participants: string[];
+  sentiment: string;
+}
+
+interface MeetingData {
+  meeting: Meeting;
+  transcript: Transcript | null;
+  summary: Summary | null;
+  analytics: {
+    viewCount: number;
+    shareCount: number;
+    downloadCount: number;
+  } | null;
 }
 
 export default function MeetingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [meeting, setMeeting] = useState<MeetingData | null>(null);
+  const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,30 +66,15 @@ export default function MeetingDetail() {
   const fetchMeetingData = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('meetings')
-        .select(`
-          *,
-          transcripts(*),
-          summaries(*)
-        `)
-        .eq('id', id!)
-        .single();
-
-      if (error) throw error;
-
-      if (!data) {
-        setError('Meeting not found');
-        return;
-      }
-
-      setMeeting(data as any);
+      const response = await meetingsAPI.getById(id!);
+      setMeetingData(response.data);
     } catch (err: any) {
       console.error('Error fetching meeting:', err);
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to load meeting details';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to load meeting details",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -80,7 +95,7 @@ export default function MeetingDetail() {
     );
   }
 
-  if (error || !meeting) {
+  if (error || !meetingData) {
     return (
       <Layout>
         <div className="p-8 max-w-6xl mx-auto">
@@ -97,6 +112,8 @@ export default function MeetingDetail() {
     );
   }
 
+  const { meeting, summary, transcript } = meetingData;
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -105,7 +122,7 @@ export default function MeetingDetail() {
     });
   };
 
-  const formatDuration = (seconds: number | null) => {
+  const formatDuration = (seconds: number | undefined | null) => {
     if (!seconds) return 'Unknown';
     const minutes = Math.floor(seconds / 60);
     return `${minutes} min`;
@@ -128,9 +145,6 @@ export default function MeetingDetail() {
     );
   };
 
-  const summary = meeting.summaries as any;
-  const transcript = meeting.transcripts as any;
-
   return (
     <Layout>
       <div className="p-8 max-w-6xl mx-auto">
@@ -143,11 +157,11 @@ export default function MeetingDetail() {
           <div className="flex flex-wrap gap-4 text-muted-foreground mb-4">
             <span className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              {formatDate(meeting.created_at)}
+              {formatDate(meeting.createdAt)}
             </span>
             <span className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              {formatDuration(meeting.duration_seconds)}
+              {formatDuration(meeting.durationSeconds)}
             </span>
             {summary?.participants && summary.participants.length > 0 && (
               <span className="flex items-center gap-2">
@@ -165,7 +179,7 @@ export default function MeetingDetail() {
               ))}
             </div>
           )}
-          {meeting.video_url && meeting.status === 'completed' && (
+          {meeting.videoUrl && meeting.status === 'completed' && (
             <Button
               onClick={() => navigate(`/meetings/${id}/play`)}
               className="rounded-xl mt-4"
@@ -202,7 +216,7 @@ export default function MeetingDetail() {
               <div>
                 <h3 className="font-semibold text-destructive">Processing Failed</h3>
                 <p className="text-sm text-muted-foreground">
-                  {meeting.error_message || 'An error occurred while processing this meeting.'}
+                  {meeting.errorMessage || 'An error occurred while processing this meeting.'}
                 </p>
               </div>
             </div>
@@ -212,8 +226,8 @@ export default function MeetingDetail() {
         {/* Meeting Report */}
         {meeting.status === 'completed' && summary && transcript && (
           <MeetingReport
-            summary={summary.summary_text}
-            actionItems={summary.action_items?.map((item: string) => ({
+            summary={summary.summaryText}
+            actionItems={summary.actionItems?.map((item: string) => ({
               time: '0:00',
               description: item
             })) || []}
@@ -222,7 +236,7 @@ export default function MeetingDetail() {
               engagement: 76,
               sentiment: summary.sentiment === 'positive' ? 85 : summary.sentiment === 'negative' ? 50 : 70
             }}
-            transcript={transcript.cleaned_transcript || transcript.raw_transcript}
+            transcript={transcript.cleanedTranscript || transcript.rawTranscript}
           />
         )}
 
