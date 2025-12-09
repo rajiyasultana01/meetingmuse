@@ -5,55 +5,30 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Play, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MeetingReport } from "@/components/MeetingReport";
-import { meetingsAPI } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Meeting {
-  _id: string;
-  title: string;
-  description?: string;
-  status: string;
-  videoUrl?: string;
-  videoPath?: string;
-  source: string;
-  durationSeconds?: number;
-  createdAt: string;
-  errorMessage?: string;
-}
-
-interface Transcript {
-  rawTranscript: string;
-  cleanedTranscript?: string;
-  language: string;
-  wordCount: number;
-}
-
-interface Summary {
-  summaryText: string;
-  keyPoints: string[];
-  actionItems: string[];
-  topics: string[];
-  participants: string[];
-  sentiment: string;
-}
+import api from "@/services/api";
 
 interface MeetingData {
-  meeting: Meeting;
-  transcript: Transcript | null;
-  summary: Summary | null;
-  analytics: {
-    viewCount: number;
-    shareCount: number;
-    downloadCount: number;
-  } | null;
+  _id: string;
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  durationSeconds: number;
+  videoUrl?: string;
+  errorMessage?: string;
+  transcripts?: any;
+  summaries?: any;
+  transcript?: any; // Backend might return populated
+  summary?: any;    // Backend might return populated
 }
 
 export default function MeetingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
+  const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,17 +41,43 @@ export default function MeetingDetail() {
   const fetchMeetingData = async () => {
     try {
       setIsLoading(true);
-      const response = await meetingsAPI.getById(id!);
-      setMeetingData(response.data);
+      // Use API client instead of Supabase
+      const response = await api.get(`/meetings/${id}`);
+      const data = response.data;
+
+      // Check if backend returns nested structure { meeting: {...}, transcript: {...}, summary: {...} }
+      // or flat structure. Based on controller, it return nested.
+
+      let meetingData = data;
+      if (data.meeting) {
+        meetingData = {
+          ...data.meeting,
+          transcript: data.transcript,
+          summary: data.summary,
+          // Map id if needed (mongo _id usually)
+          id: data.meeting._id || data.meeting.id
+        };
+      }
+
+      if (!meetingData) {
+        setError('Meeting not found');
+        return;
+      }
+
+      setMeeting(meetingData);
     } catch (err: any) {
       console.error('Error fetching meeting:', err);
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to load meeting details';
-      setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Handle ID format errors (e.g. valid mongo ID)
+      if (err.response?.status === 404 || err.response?.status === 400) {
+        setError('Meeting not found');
+      } else {
+        setError(err.message || 'Failed to load meeting');
+        toast({
+          title: "Error",
+          description: "Failed to load meeting details",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +96,7 @@ export default function MeetingDetail() {
     );
   }
 
-  if (error || !meetingData) {
+  if (error || !meeting) {
     return (
       <Layout>
         <div className="p-8 max-w-6xl mx-auto">
@@ -112,38 +113,45 @@ export default function MeetingDetail() {
     );
   }
 
-  const { meeting, summary, transcript } = meetingData;
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (e) { return 'Unknown Date'; }
   };
 
-  const formatDuration = (seconds: number | undefined | null) => {
+  const formatDuration = (seconds: number | undefined) => {
     if (!seconds) return 'Unknown';
     const minutes = Math.floor(seconds / 60);
     return `${minutes} min`;
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string = 'unknown') => {
     const statusColors: Record<string, string> = {
       'completed': 'bg-green-500',
       'processing': 'bg-blue-500',
       'transcribing': 'bg-yellow-500',
       'summarizing': 'bg-purple-500',
       'failed': 'bg-red-500',
-      'uploaded': 'bg-gray-500'
+      'uploaded': 'bg-gray-500',
+      'unknown': 'bg-gray-400'
     };
 
+    const displayStatus = status || 'unknown';
+
     return (
-      <Badge className={statusColors[status] || 'bg-gray-500'}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <Badge className={statusColors[displayStatus] || 'bg-gray-500'}>
+        {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
       </Badge>
     );
   };
+
+  // Map backend fields to component props - check both nested and flat structures
+  const summary = meeting.summary || meeting.summaries;
+  const transcript = meeting.transcript || meeting.transcripts;
 
   return (
     <Layout>
@@ -226,7 +234,7 @@ export default function MeetingDetail() {
         {/* Meeting Report */}
         {meeting.status === 'completed' && summary && transcript && (
           <MeetingReport
-            summary={summary.summaryText}
+            summary={summary.summaryText || summary.summary_text} // Support both for now if needed, but prefer camelCase
             actionItems={summary.actionItems?.map((item: string) => ({
               time: '0:00',
               description: item
