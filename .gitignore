@@ -49,3 +49,22 @@ tmp/
 
 venv/
 node_modules/
+# Python virtual env
+venv/
+.env/
+
+# Node packages
+node_modules/
+
+# VSCode / IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs + cache
+*.log
+__pycache__/
+*.pyc
