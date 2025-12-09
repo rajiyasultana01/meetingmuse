@@ -45,3 +45,7 @@ Thumbs.db
 *.temp
 temp/
 tmp/
+
+
+venv/
+node_modules/
