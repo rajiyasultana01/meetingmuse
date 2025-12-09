@@ -62,6 +62,41 @@ const extractAudioToMp3 = async (videoPath: string): Promise<string> => {
   }
 };
 
+export const convertVideoToMp4 = async (inputPath: string): Promise<string> => {
+  const ext = path.extname(inputPath).toLowerCase();
+  if (ext === '.mp4') {
+    return inputPath; // Already MP4
+  }
+
+  const outputPath = inputPath.replace(ext, '.mp4');
+
+  try {
+    console.log(`Converting ${ext} video to MP4...`);
+
+    let ffmpegPath = 'ffmpeg';
+    // Check for local ffmpeg installation in project root
+    const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
+    if (fs.existsSync(localFfmpegPath)) {
+      ffmpegPath = `"${localFfmpegPath}"`;
+    }
+
+    // Convert to compatible MP4 (H.264 + AAC)
+    // -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k -movflags +faststart
+    const command = `${ffmpegPath} -i "${inputPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k -movflags +faststart "${outputPath}" -y`;
+
+    await execAsync(command);
+    console.log('Conversion complete. New file:', outputPath);
+
+    return outputPath;
+  } catch (error: any) {
+    console.error('Video conversion error:', error);
+    // Return original path in case of failure, or throw?
+    // Throwing is safer so we know it failed. But maybe we can proceed with webm?
+    // If conversion fails, likely ffmpeg issue.
+    throw new Error(`Failed to convert video: ${error.message}`);
+  }
+};
+
 export const transcribeVideo = async (videoPath: string): Promise<TranscriptionResult> => {
   let audioPath: string | null = null;
 

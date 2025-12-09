@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { authAPI } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-background.jpg";
+import { auth } from "@/config/firebase";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function Login() {
     try {
       // Sign in with Firebase
       await login(email, password);
+      await saveTokenForExtension();
 
       toast({
         title: "Success!",
@@ -77,6 +79,7 @@ export default function Login() {
 
     try {
       await loginWithGoogle();
+      await saveTokenForExtension();
 
       toast({
         title: "Success!",
@@ -118,6 +121,21 @@ export default function Login() {
       });
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  // Helper to save token for extension
+  const saveTokenForExtension = async () => {
+    try {
+      if (auth.currentUser) {
+        const token = await auth.currentUser.getIdToken(true);
+        localStorage.setItem('meetingmuse_extension_token', token);
+        localStorage.setItem('meetingmuse_user_email', auth.currentUser.email || '');
+        localStorage.setItem('meetingmuse_user_uid', auth.currentUser.uid);
+        console.log('Token saved for extension access');
+      }
+    } catch (e) {
+      console.error('Failed to save token for extension:', e);
     }
   };
 
