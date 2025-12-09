@@ -5,18 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Play, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MeetingReport } from "@/components/MeetingReport";
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Tables } from "@/integrations/supabase/types";
+import api from "@/services/api";
 
-type Meeting = Tables<'meetings'>;
-type Transcript = Tables<'transcripts'>;
-type Summary = Tables<'summaries'>;
-
-interface MeetingData extends Meeting {
-  transcripts?: Transcript | null;
-  summaries?: Summary | null;
+interface MeetingData {
+  _id: string;
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  durationSeconds: number;
+  videoUrl?: string;
+  errorMessage?: string;
+  transcripts?: any;
+  summaries?: any;
+  transcript?: any; // Backend might return populated
+  summary?: any;    // Backend might return populated
 }
 
 export default function MeetingDetail() {
@@ -36,32 +41,43 @@ export default function MeetingDetail() {
   const fetchMeetingData = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('meetings')
-        .select(`
-          *,
-          transcripts(*),
-          summaries(*)
-        `)
-        .eq('id', id!)
-        .single();
+      // Use API client instead of Supabase
+      const response = await api.get(`/meetings/${id}`);
+      const data = response.data;
 
-      if (error) throw error;
+      // Check if backend returns nested structure { meeting: {...}, transcript: {...}, summary: {...} }
+      // or flat structure. Based on controller, it return nested.
 
-      if (!data) {
+      let meetingData = data;
+      if (data.meeting) {
+        meetingData = {
+          ...data.meeting,
+          transcript: data.transcript,
+          summary: data.summary,
+          // Map id if needed (mongo _id usually)
+          id: data.meeting._id || data.meeting.id
+        };
+      }
+
+      if (!meetingData) {
         setError('Meeting not found');
         return;
       }
 
-      setMeeting(data as any);
+      setMeeting(meetingData);
     } catch (err: any) {
       console.error('Error fetching meeting:', err);
-      setError(err.message);
-      toast({
-        title: "Error",
-        description: "Failed to load meeting details",
-        variant: "destructive",
-      });
+      // Handle ID format errors (e.g. valid mongo ID)
+      if (err.response?.status === 404 || err.response?.status === 400) {
+        setError('Meeting not found');
+      } else {
+        setError(err.message || 'Failed to load meeting');
+        toast({
+          title: "Error",
+          description: "Failed to load meeting details",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -98,38 +114,44 @@ export default function MeetingDetail() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (e) { return 'Unknown Date'; }
   };
 
-  const formatDuration = (seconds: number | null) => {
+  const formatDuration = (seconds: number | undefined) => {
     if (!seconds) return 'Unknown';
     const minutes = Math.floor(seconds / 60);
     return `${minutes} min`;
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string = 'unknown') => {
     const statusColors: Record<string, string> = {
       'completed': 'bg-green-500',
       'processing': 'bg-blue-500',
       'transcribing': 'bg-yellow-500',
       'summarizing': 'bg-purple-500',
       'failed': 'bg-red-500',
-      'uploaded': 'bg-gray-500'
+      'uploaded': 'bg-gray-500',
+      'unknown': 'bg-gray-400'
     };
 
+    const displayStatus = status || 'unknown';
+
     return (
-      <Badge className={statusColors[status] || 'bg-gray-500'}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <Badge className={statusColors[displayStatus] || 'bg-gray-500'}>
+        {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
       </Badge>
     );
   };
 
-  const summary = meeting.summaries as any;
-  const transcript = meeting.transcripts as any;
+  // Map backend fields to component props - check both nested and flat structures
+  const summary = meeting.summary || meeting.summaries;
+  const transcript = meeting.transcript || meeting.transcripts;
 
   return (
     <Layout>
@@ -143,11 +165,11 @@ export default function MeetingDetail() {
           <div className="flex flex-wrap gap-4 text-muted-foreground mb-4">
             <span className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              {formatDate(meeting.created_at)}
+              {formatDate(meeting.createdAt)}
             </span>
             <span className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              {formatDuration(meeting.duration_seconds)}
+              {formatDuration(meeting.durationSeconds)}
             </span>
             {summary?.participants && summary.participants.length > 0 && (
               <span className="flex items-center gap-2">
@@ -165,7 +187,7 @@ export default function MeetingDetail() {
               ))}
             </div>
           )}
-          {meeting.video_url && meeting.status === 'completed' && (
+          {meeting.videoUrl && meeting.status === 'completed' && (
             <Button
               onClick={() => navigate(`/meetings/${id}/play`)}
               className="rounded-xl mt-4"
@@ -202,7 +224,7 @@ export default function MeetingDetail() {
               <div>
                 <h3 className="font-semibold text-destructive">Processing Failed</h3>
                 <p className="text-sm text-muted-foreground">
-                  {meeting.error_message || 'An error occurred while processing this meeting.'}
+                  {meeting.errorMessage || 'An error occurred while processing this meeting.'}
                 </p>
               </div>
             </div>
@@ -212,8 +234,8 @@ export default function MeetingDetail() {
         {/* Meeting Report */}
         {meeting.status === 'completed' && summary && transcript && (
           <MeetingReport
-            summary={summary.summary_text}
-            actionItems={summary.action_items?.map((item: string) => ({
+            summary={summary.summaryText || summary.summary_text} // Support both for now if needed, but prefer camelCase
+            actionItems={summary.actionItems?.map((item: string) => ({
               time: '0:00',
               description: item
             })) || []}
@@ -222,7 +244,7 @@ export default function MeetingDetail() {
               engagement: 76,
               sentiment: summary.sentiment === 'positive' ? 85 : summary.sentiment === 'negative' ? 50 : 70
             }}
-            transcript={transcript.cleaned_transcript || transcript.raw_transcript}
+            transcript={transcript.cleanedTranscript || transcript.rawTranscript}
           />
         )}
 

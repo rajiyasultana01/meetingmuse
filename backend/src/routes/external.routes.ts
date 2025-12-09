@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { verifyApiKey } from '../middleware/auth.js';
+import { authenticateUser, AuthRequest } from '../middleware/auth.js';
 import { User } from '../models/User.js';
 import { Meeting } from '../models/Meeting.js';
 import { uploadToFirebase } from '../services/storage.service.js';
@@ -15,7 +15,7 @@ interface ExternalRecordingRequest {
   fileName: string;
   title?: string;
   description?: string;
-  userId: string; // Firebase UID
+  userId?: string; // Optional in body, we get it from token
   externalId?: string;
   metadata?: {
     duration?: number;
@@ -26,8 +26,8 @@ interface ExternalRecordingRequest {
 
 router.post(
   '/receive-recording',
-  verifyApiKey,
-  async (req: Request, res: Response): Promise<void> => {
+  authenticateUser,
+  async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const {
         video,
@@ -35,10 +35,11 @@ router.post(
         fileName,
         title,
         description,
-        userId,
         externalId,
         metadata,
       }: ExternalRecordingRequest = req.body;
+
+      const userId = req.user!.uid; // Trusted from token
 
       // Validate request
       if (!video && !videoUrl) {
@@ -48,11 +49,6 @@ router.post(
 
       if (!fileName) {
         res.status(400).json({ error: 'fileName is required' });
-        return;
-      }
-
-      if (!userId) {
-        res.status(400).json({ error: 'userId is required' });
         return;
       }
 
@@ -90,9 +86,23 @@ router.post(
         return;
       }
 
-      // Upload to Firebase
+      // Upload to Firebase with fallback
       const firebasePath = `meetings/${user.firebaseUid}/external-${externalId || Date.now()}-${fileName}`;
-      const firebaseUrl = await uploadToFirebase(localPath, firebasePath);
+      let firebaseUrl: string;
+      let storagePath: string = firebasePath; // Default to firebase path pattern
+      let uploadStatus = 'uploaded';
+
+      try {
+        firebaseUrl = await uploadToFirebase(localPath, firebasePath);
+      } catch (uploadError) {
+        console.error('Firebase upload failed, falling back to local storage:', uploadError);
+        // Fallback: Use local file URL
+        // Assuming backend serves 'uploads' folder statically
+        const relativePath = path.relative(process.cwd(), localPath);
+        firebaseUrl = `http://localhost:5000/${relativePath.replace(/\\/g, '/')}`; // Convert windoes path
+        storagePath = localPath;
+        uploadStatus = 'processing'; // Use a valid status enum
+      }
 
       // Create meeting record
       const meeting = await Meeting.create({
@@ -100,10 +110,10 @@ router.post(
         firebaseUid: user.firebaseUid,
         title: title || fileName.replace(/\.[^/.]+$/, ''),
         description: description || `External recording${externalId ? ` (ID: ${externalId})` : ''}`,
-        videoPath: firebasePath,
+        videoPath: storagePath,
         videoUrl: firebaseUrl,
         source: 'chrome-extension', // From Chrome extension
-        status: 'uploaded',
+        status: uploadStatus,
         durationSeconds: metadata?.duration,
       });
 

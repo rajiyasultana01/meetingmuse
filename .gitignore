@@ -68,3 +68,6 @@ Thumbs.db
 *.log
 __pycache__/
 *.pyc
+
+LexEye/
+LexEye
