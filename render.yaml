@@ -34,7 +34,6 @@ services:
   - type: web
     name: meetingmuse-frontend
     env: static
-    region: oregon
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     headers:
@@ -59,9 +58,3 @@ services:
         sync: false
       - key: VITE_FIREBASE_APP_ID
         sync: false
-
-databases:
-  - name: meetingmuse-mongodb
-    plan: free
-    databaseName: meetingmuse
-    user: meetingmuse_user
