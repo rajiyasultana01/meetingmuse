@@ -11,6 +11,9 @@
     "lint": "eslint src --ext ts",
     "setup-admin": "tsx src/scripts/setup-admin.ts"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "keywords": [
     "express",
     "firebase",
