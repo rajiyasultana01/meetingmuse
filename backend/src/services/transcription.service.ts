@@ -57,10 +57,10 @@ const extractAudioToMp3 = async (videoPath: string): Promise<string> => {
   try {
     console.log('Extracting audio from video...');
 
-    let ffmpegPath = ffmpegStatic || 'ffmpeg';
+    let ffmpegPath = (ffmpegStatic as unknown as string) || 'ffmpeg';
     const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
     if (fs.existsSync(localFfmpegPath)) {
-      ffmpegPath = localFfmpegPath; // Spawn doesn't need quotes usually
+      ffmpegPath = localFfmpegPath;
       console.log('Using local FFmpeg:', localFfmpegPath);
     } else {
       console.log('Using static FFmpeg:', ffmpegPath);
@@ -100,7 +100,7 @@ export const convertVideoToMp4 = async (inputPath: string): Promise<string> => {
   try {
     console.log(`Converting ${ext} video to MP4...`);
 
-    let ffmpegPath = ffmpegStatic || 'ffmpeg';
+    let ffmpegPath = (ffmpegStatic as unknown as string) || 'ffmpeg';
     const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
     if (fs.existsSync(localFfmpegPath)) {
       ffmpegPath = localFfmpegPath;
