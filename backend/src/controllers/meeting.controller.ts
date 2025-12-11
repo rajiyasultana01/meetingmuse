@@ -32,9 +32,14 @@ export const uploadMeeting = async (
     const firebasePath = `meetings/${user.firebaseUid}/${Date.now()}-${req.file.filename}`;
     // const videoUrl = await uploadToFirebase(localPath, firebasePath);
     // Construct URL dynamically based on server environment
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const host = req.get('host');
-    const videoUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    let baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Force Render URL in production to avoid localhost issues behind proxy
+    if (process.env.NODE_ENV === 'production') {
+      baseUrl = 'https://meetingmuse-backend.onrender.com';
+    }
+
+    const videoUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
     // Create meeting record
     const meeting = await Meeting.create({
@@ -87,9 +92,14 @@ export const uploadMeetingFromExtension = async (
     }
 
     // Construct URL dynamically based on server environment
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const host = req.get('host');
-    const videoUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    let baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Force Render URL in production to avoid localhost issues behind proxy
+    if (process.env.NODE_ENV === 'production') {
+      baseUrl = 'https://meetingmuse-backend.onrender.com';
+    }
+
+    const videoUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
     // Create meeting record
     const meeting = await Meeting.create({
@@ -141,9 +151,14 @@ export const uploadMeetingFromExtensionAuth = async (
     }
 
     // Construct URL dynamically based on server environment
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const host = req.get('host');
-    const videoUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    let baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Force Render URL in production to avoid localhost issues behind proxy
+    if (process.env.NODE_ENV === 'production') {
+      baseUrl = 'https://meetingmuse-backend.onrender.com';
+    }
+
+    const videoUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
     // Create meeting record assigned to the authenticated user
     const meeting = await Meeting.create({
