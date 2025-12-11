@@ -1,8 +1,7 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import dns from 'dns';
 import ffmpegStatic from 'ffmpeg-static';
 
@@ -13,12 +12,10 @@ try {
   console.error('Failed to apply DNS fix in transcription service:', e);
 }
 
-const execAsync = promisify(exec);
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 300000, // 5 minutes timeout (increased from 60s)
-  maxRetries: 3, // Retry 3 times on network errors
+  timeout: 300000, // 5 minutes timeout
+  maxRetries: 3,
 });
 
 export interface TranscriptionResult {
@@ -26,34 +23,61 @@ export interface TranscriptionResult {
   language?: string;
 }
 
+// Memory-safe spawn wrapper to replace exec
+const runCommand = (command: string, args: string[]): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    console.log(`Spawning command: ${command} ${args.join(' ')}`);
+    const child = spawn(command, args);
+
+    child.stdout.on('data', (data) => {
+      // console.log(`stdout: ${data}`); // Disable logging to save memory
+    });
+
+    child.stderr.on('data', (data) => {
+      // console.error(`stderr: ${data}`); // Disable logging to save memory
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command failed with code ${code}`));
+      }
+    });
+
+    child.on('error', (err) => {
+      reject(err);
+    });
+  });
+};
+
 const extractAudioToMp3 = async (videoPath: string): Promise<string> => {
   const audioPath = videoPath.replace(path.extname(videoPath), '.mp3');
 
   try {
     console.log('Extracting audio from video...');
 
-    // Find ffmpeg executable
-    // Use ffmpeg-static for Render/Production, with fallback to 'ffmpeg'
     let ffmpegPath = ffmpegStatic || 'ffmpeg';
-
-    // Check for local ffmpeg installation in project root
     const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
     if (fs.existsSync(localFfmpegPath)) {
-      ffmpegPath = `"${localFfmpegPath}"`;
+      ffmpegPath = localFfmpegPath; // Spawn doesn't need quotes usually
       console.log('Using local FFmpeg:', localFfmpegPath);
     } else {
       console.log('Using static FFmpeg:', ffmpegPath);
     }
 
-    // Use FFmpeg to extract audio and compress to MP3
-    // -i: input file
-    // -vn: no video
-    // -ar 16000: sample rate 16kHz (good for speech)
-    // -ac 1: mono audio
-    // -b:a 32k: 32kbps bitrate (low quality but small file size)
-    const command = `${ffmpegPath} -i "${videoPath}" -vn -ar 16000 -ac 1 -b:a 32k "${audioPath}" -y`;
+    // FFmpeg args
+    const args = [
+      '-i', videoPath,
+      '-vn',
+      '-ar', '16000',
+      '-ac', '1',
+      '-b:a', '32k',
+      audioPath,
+      '-y'
+    ];
 
-    await execAsync(command);
+    await runCommand(ffmpegPath, args);
 
     const audioStats = fs.statSync(audioPath);
     console.log(`Audio extracted: ${audioPath} (${(audioStats.size / (1024 * 1024)).toFixed(2)} MB)`);
@@ -68,7 +92,7 @@ const extractAudioToMp3 = async (videoPath: string): Promise<string> => {
 export const convertVideoToMp4 = async (inputPath: string): Promise<string> => {
   const ext = path.extname(inputPath).toLowerCase();
   if (ext === '.mp4') {
-    return inputPath; // Already MP4
+    return inputPath;
   }
 
   const outputPath = inputPath.replace(ext, '.mp4');
@@ -77,25 +101,30 @@ export const convertVideoToMp4 = async (inputPath: string): Promise<string> => {
     console.log(`Converting ${ext} video to MP4...`);
 
     let ffmpegPath = ffmpegStatic || 'ffmpeg';
-    // Check for local ffmpeg installation in project root
     const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
     if (fs.existsSync(localFfmpegPath)) {
-      ffmpegPath = `"${localFfmpegPath}"`;
+      ffmpegPath = localFfmpegPath;
     }
 
-    // Convert to compatible MP4 (H.264 + AAC)
-    // -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k -movflags +faststart
-    const command = `${ffmpegPath} -i "${inputPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k -movflags +faststart "${outputPath}" -y`;
+    // FFmpeg args for conversion
+    const args = [
+      '-i', inputPath,
+      '-c:v', 'libx264',
+      '-preset', 'fast',
+      '-crf', '23',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-movflags', '+faststart',
+      outputPath,
+      '-y'
+    ];
 
-    await execAsync(command);
+    await runCommand(ffmpegPath, args);
     console.log('Conversion complete. New file:', outputPath);
 
     return outputPath;
   } catch (error: any) {
     console.error('Video conversion error:', error);
-    // Return original path in case of failure, or throw?
-    // Throwing is safer so we know it failed. But maybe we can proceed with webm?
-    // If conversion fails, likely ffmpeg issue.
     throw new Error(`Failed to convert video: ${error.message}`);
   }
 };
@@ -106,7 +135,7 @@ export const transcribeVideo = async (videoPath: string): Promise<TranscriptionR
   try {
     console.log('Starting transcription for:', videoPath);
 
-    // Extract audio to MP3 to reduce file size
+    // Extract audio
     audioPath = await extractAudioToMp3(videoPath);
 
     // Check file size
@@ -133,7 +162,6 @@ export const transcribeVideo = async (videoPath: string): Promise<TranscriptionR
     console.error('Transcription error:', error);
     throw new Error(`Failed to transcribe video: ${error.message}`);
   } finally {
-    // Clean up temporary audio file
     if (audioPath && fs.existsSync(audioPath)) {
       try {
         fs.unlinkSync(audioPath);
@@ -147,23 +175,14 @@ export const transcribeVideo = async (videoPath: string): Promise<TranscriptionR
 
 export const cleanTranscript = (rawTranscript: string): string => {
   let cleaned = rawTranscript;
-
-  // Remove excessive whitespace
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-  // Remove common filler words
   cleaned = cleaned.replace(/\buh+\b/gi, '');
   cleaned = cleaned.replace(/\bum+\b/gi, '');
   cleaned = cleaned.replace(/\ber+\b/gi, '');
   cleaned = cleaned.replace(/\blike\b/gi, '');
-
-  // Capitalize sentences
   cleaned = cleaned.replace(/(^\w|\.\s+\w)/g, (letter) => letter.toUpperCase());
-
-  // Remove duplicate sentences
   const sentences = cleaned.split(/\.\s+/);
   const uniqueSentences = [...new Set(sentences)];
   cleaned = uniqueSentences.join('. ');
-
   return cleaned;
 };
