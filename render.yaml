@@ -36,7 +36,7 @@ services:
     name: meetingmuse-frontend
     env: static
     rootDirectory: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && cp dist/index.html dist/404.html
     staticPublishPath: dist
     headers:
       - path: /*
