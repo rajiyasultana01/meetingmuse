@@ -1,7 +1,7 @@
 {
   "name": "meetingmind-backend",
   "version": "1.0.0",
-  "description": "Backend API for MeetingMind with Firebase Auth and MongoDB",
+  "description": "Backend API for Meeting Muse with Firebase Auth and MongoDB",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {

@@ -94,10 +94,10 @@ app.use('/api/', limiter);
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    name: 'MeetingMind API',
+    name: 'Meeting Muse API',
     version: '1.0.0',
     status: 'running',
-    message: 'Welcome to MeetingMind API',
+    message: 'Welcome to Meeting Muse API',
     endpoints: {
       health: '/health',
       auth: '/api/auth',
