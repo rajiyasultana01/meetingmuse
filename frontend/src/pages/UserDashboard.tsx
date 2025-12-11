@@ -9,14 +9,24 @@ import { Badge } from "@/components/ui/badge";
 import { meetingsAPI, Meeting } from "@/services/meetings";
 import { format } from "date-fns";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function UserDashboard() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchRecentMeetings();
-  }, []);
+    if (!authLoading) {
+      if (user) {
+        fetchRecentMeetings();
+      } else {
+        // Not logged in? Should be protected route but just in case
+        setLoading(false);
+      }
+    }
+  }, [authLoading, user]);
 
   const fetchRecentMeetings = async () => {
     try {

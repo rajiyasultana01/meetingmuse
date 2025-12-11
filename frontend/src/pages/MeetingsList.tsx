@@ -10,9 +10,12 @@ import { meetingsAPI, Meeting } from "@/services/meetings";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function MeetingsList() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,8 +38,14 @@ export default function MeetingsList() {
   };
 
   useEffect(() => {
-    fetchMeetings();
-  }, []);
+    if (!authLoading) {
+      if (user) {
+        fetchMeetings();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [authLoading, user]);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();

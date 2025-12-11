@@ -1,8 +1,4 @@
-import axios from 'axios';
-import { auth } from '@/config/firebase';
-
-const envApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_URL = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
+import api from '@/services/api';
 
 export interface Meeting {
     _id: string;
@@ -25,11 +21,8 @@ export interface MeetingsResponse {
 
 export const meetingsAPI = {
     getAll: async (limit = 20, offset = 0) => {
-        const token = await auth.currentUser?.getIdToken();
-        const response = await axios.get<MeetingsResponse>(`${API_URL}/meetings`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+        // api instance handles base URL and Authorization token automatically
+        const response = await api.get<MeetingsResponse>('/meetings', {
             params: {
                 limit,
                 offset,
@@ -39,22 +32,12 @@ export const meetingsAPI = {
     },
 
     getById: async (id: string) => {
-        const token = await auth.currentUser?.getIdToken();
-        const response = await axios.get(`${API_URL}/meetings/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get(`/meetings/${id}`);
         return response.data;
     },
 
     delete: async (id: string) => {
-        const token = await auth.currentUser?.getIdToken();
-        const response = await axios.delete(`${API_URL}/meetings/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.delete(`/meetings/${id}`);
         return response.data;
     },
 };
