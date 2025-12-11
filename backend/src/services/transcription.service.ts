@@ -4,6 +4,7 @@ import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import dns from 'dns';
+import ffmpegStatic from 'ffmpeg-static';
 
 // Fix DNS resolution issues by forcing Google DNS
 try {
@@ -32,14 +33,16 @@ const extractAudioToMp3 = async (videoPath: string): Promise<string> => {
     console.log('Extracting audio from video...');
 
     // Find ffmpeg executable
-    // Check if ffmpeg is in PATH, otherwise use local installation
-    let ffmpegPath = 'ffmpeg';
+    // Use ffmpeg-static for Render/Production, with fallback to 'ffmpeg'
+    let ffmpegPath = ffmpegStatic || 'ffmpeg';
 
     // Check for local ffmpeg installation in project root
     const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
     if (fs.existsSync(localFfmpegPath)) {
       ffmpegPath = `"${localFfmpegPath}"`;
       console.log('Using local FFmpeg:', localFfmpegPath);
+    } else {
+      console.log('Using static FFmpeg:', ffmpegPath);
     }
 
     // Use FFmpeg to extract audio and compress to MP3
@@ -73,7 +76,7 @@ export const convertVideoToMp4 = async (inputPath: string): Promise<string> => {
   try {
     console.log(`Converting ${ext} video to MP4...`);
 
-    let ffmpegPath = 'ffmpeg';
+    let ffmpegPath = ffmpegStatic || 'ffmpeg';
     // Check for local ffmpeg installation in project root
     const localFfmpegPath = path.join(process.cwd(), '..', 'ffmpeg-8.0.1-essentials_build', 'bin', 'ffmpeg.exe');
     if (fs.existsSync(localFfmpegPath)) {
