@@ -149,7 +149,7 @@ export default function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40" />
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <h1 className="text-5xl font-bold font-playfair mb-4">
-            Welcome to MeetingMind
+            Welcome to Meeting Muse
           </h1>
           <p className="text-xl text-gray-200">
             Transform your meetings into actionable insights with AI-powered summaries.
@@ -274,7 +274,7 @@ export default function Login() {
 
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-xs text-center text-muted-foreground">
-              Create an account to get started with MeetingMind
+              Create an account to get started with Meeting Muse
             </p>
           </div>
         </Card>

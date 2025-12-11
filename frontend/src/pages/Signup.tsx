@@ -123,7 +123,7 @@ export default function Signup() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40" />
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <h1 className="text-5xl font-bold mb-4">
-            Join MeetingMind Today
+            Join Meeting Muse Today
           </h1>
           <p className="text-xl text-gray-200">
             Start transforming your meetings into actionable insights with AI-powered summaries.

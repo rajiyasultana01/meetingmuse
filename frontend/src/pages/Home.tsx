@@ -97,7 +97,7 @@ export default function Home() {
       <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate("/")}>
-            MeetingMind
+            Meeting Muse
           </h1>
           <div className="flex gap-4">
             {user ? (
@@ -158,7 +158,7 @@ export default function Home() {
               <Sparkles className="h-4 w-4" />
               <span>AI-Powered Meeting Intelligence</span>
             </div>
-            
+
             <h1 className="text-5xl md:text-7xl font-bold leading-tight">
               Transform Meetings into{" "}
               <span className="relative">
@@ -166,24 +166,24 @@ export default function Home() {
                 <span className="absolute inset-0 bg-gradient-to-r from-foreground/20 to-transparent blur-xl"></span>
               </span>
             </h1>
-            
+
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Stop taking notes. Let AI capture every detail, generate smart summaries, 
+              Stop taking notes. Let AI capture every detail, generate smart summaries,
               and help your team focus on what really matters.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="rounded-xl shadow-soft hover:shadow-hover text-lg px-8"
                 onClick={() => navigate("/login")}
               >
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="rounded-xl text-lg px-8"
               >
                 Watch Demo
@@ -271,10 +271,10 @@ export default function Home() {
               Ready to Transform Your Meetings?
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of teams already saving time and boosting productivity with MeetingMind
+              Join thousands of teams already saving time and boosting productivity with Meeting Muse
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="rounded-xl shadow-soft hover:shadow-hover text-lg px-8"
               onClick={() => navigate("/login")}
             >
@@ -293,7 +293,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold font-playfair text-lg mb-4">MeetingMind</h3>
+              <h3 className="font-bold font-playfair text-lg mb-4">Meeting Muse</h3>
               <p className="text-sm text-muted-foreground">
                 AI-powered meeting summaries for smarter teams
               </p>
@@ -324,7 +324,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 MeetingMind. All rights reserved. Made with ❤️</p>
+            <p>&copy; 2024 Meeting Muse. All rights reserved. Made with ❤️</p>
           </div>
         </div>
       </footer>

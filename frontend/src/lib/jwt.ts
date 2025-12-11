@@ -2,7 +2,7 @@
  * JWT Token Management Utilities
  *
  * This file provides utilities for managing JWT tokens
- * in the MeetingMind application.
+ * in the Meeting Muse application.
  */
 
 export interface JWTTokens {

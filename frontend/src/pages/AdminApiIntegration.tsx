@@ -168,7 +168,7 @@ export default function AdminApiIntegration() {
           <Card className="p-6">
             <h2 className="text-2xl font-semibold mb-4">API Documentation</h2>
             <p className="text-muted-foreground mb-6">
-              Reference guide for integrating with MeetingMind API
+              Reference guide for integrating with Meeting Muse API
             </p>
 
             <div className="space-y-6">

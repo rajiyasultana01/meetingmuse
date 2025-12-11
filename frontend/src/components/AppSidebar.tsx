@@ -50,7 +50,7 @@ export function AppSidebar() {
               <VideoIcon className="h-6 w-6 flex-shrink-0" />
               {open && (
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold font-playfair">MeetingMind</h1>
+                  <h1 className="text-2xl font-bold font-playfair">Meeting Muse</h1>
                   <p className="text-xs text-muted-foreground mt-1">
                     {isAdmin ? "Admin Panel" : "AI Meeting Summaries"}
                   </p>
