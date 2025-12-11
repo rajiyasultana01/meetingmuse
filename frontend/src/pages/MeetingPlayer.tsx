@@ -37,7 +37,9 @@ export default function MeetingPlayer() {
       if (meeting) {
         setTitle(meeting.title || "Meeting Recording");
         if (meeting.videoUrl) {
-          setVideoUrl(meeting.videoUrl);
+          // Fix for old meetings with localhost URL
+          const cleanUrl = meeting.videoUrl.replace('http://localhost:5000', 'https://meetingmuse-backend.onrender.com');
+          setVideoUrl(cleanUrl);
         } else {
           toast({
             title: "Video Unavailable",
