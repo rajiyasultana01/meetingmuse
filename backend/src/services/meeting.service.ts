@@ -3,7 +3,7 @@ import { Meeting } from '../models/Meeting.js';
 import { Transcript } from '../models/Transcript.js';
 import { Summary } from '../models/Summary.js';
 import { MeetingAnalytics } from '../models/MeetingAnalytics.js';
-import { transcribeVideo, cleanTranscript, convertVideoToMp4 } from './transcription.service.js';
+import { transcribeVideo, cleanTranscript } from './transcription.service.js';
 import { generateSummary } from './summarization.service.js';
 import { uploadToFirebase, deleteLocalFile } from './storage.service.js';
 
@@ -19,21 +19,11 @@ export const processMeetingVideo = async (
       status: 'transcribing',
     });
 
-    // Step 0: Ensure video is MP4
-    const finalVideoPath = await convertVideoToMp4(localVideoPath);
+    // Step 0: Skip MP4 conversion (Direct Gemini Processing)
+    // We use the original file to avoid FFmpeg usage.
+    const finalVideoPath = localVideoPath;
 
-    // If file was converted, update the Meeting URL
-    if (finalVideoPath !== localVideoPath) {
-      const meeting = await Meeting.findById(meetingId);
-      if (meeting && meeting.videoUrl) {
-        const oldExt = path.extname(meeting.videoUrl);
-        const newUrl = meeting.videoUrl.replace(oldExt, '.mp4');
-        await Meeting.findByIdAndUpdate(meetingId, { videoUrl: newUrl });
-        console.log(`Updated video URL to ${newUrl}`);
-      }
-    }
-
-    // Step 1: Transcribe video (using final path)
+    // Step 1: Transcribe video (using Gemini)
     const transcriptionResult = await transcribeVideo(finalVideoPath);
 
     // Step 2: Save raw transcript
