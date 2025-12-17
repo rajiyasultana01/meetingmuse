@@ -25,7 +25,7 @@ export default function SummarizeMeeting() {
         });
         return;
       }
-      
+
       // Check file size (max 5GB)
       if (selectedFile.size > 5 * 1024 * 1024 * 1024) {
         toast({
@@ -35,7 +35,7 @@ export default function SummarizeMeeting() {
         });
         return;
       }
-      
+
       setFile(selectedFile);
       setSummary(null);
     }
@@ -123,18 +123,18 @@ export default function SummarizeMeeting() {
             <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
               <FileVideo className="h-12 w-12 text-primary" />
             </div>
-            
+
             <div className="text-center">
               <h3 className="text-xl font-bold mb-2">Upload Meeting Video</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Supported formats: MP4, MOV, AVI (Max 5GB)
+                Supported formats: MP4, MOV, AVI, WebM, MKV (Max 5GB)
               </p>
             </div>
 
             <div className="w-full max-w-md">
               <Input
                 type="file"
-                accept="video/*"
+                accept="video/*,.mkv,.avi,.mov"
                 onChange={handleFileChange}
                 className="cursor-pointer"
                 disabled={isProcessing}

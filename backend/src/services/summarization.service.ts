@@ -27,7 +27,7 @@ ${transcript}
 """
 
 Please provide:
-1. A CONCISE summary (max 300 words) that captures the main purpose and key decisions. This should be suitable for a quick read.
+1. An EXECUTIVE SUMMARY (approx. 300-500 words) that serves as a high-level overview. This MUST capture the main purpose, ALL critical decisions, key outcomes, and major topics discussed. Ensure that NO important topic is omitted, but keep the writing style tight, professional, and focused on high-value information.
 
 2. Key points discussed (comprehensive list, not just highlights)
 3. Action items identified (with responsible parties if mentioned, deadlines if specified)
@@ -35,11 +35,11 @@ Please provide:
 5. Overall sentiment (positive, neutral, or negative)
 6. Participants mentioned (if any)
 7. Coaching tips: Provide 3-5 constructive suggestions for the meeting participants or organizer to improve future meetings (e.g. regarding clarity, engagement, time management, structure, conflict resolution).
-8. A DETAILED DEEP-DIVE SUMMARY: A comprehensive, detailed narrative of the entire meeting, covering all discussions in depth. This should be much longer and more detailed than the concise summary, serving as a full record of the discussion logic and details.
+8. A DETAILED DEEP-DIVE SUMMARY: A comprehensive, detailed narrative of the entire meeting, covering all discussions in depth. This should be much longer and more detailed than the executive summary, serving as a full record of the discussion logic and details.
 
 Format your response as JSON with the following structure:
 {
-  "summary": "string (concise, max 300 words)",
+  "summary": "string (executive summary, 300-500 words)",
   "deepDiveSummary": "string (detailed, long narrative)",
   "keyPoints": ["string"],
   "actionItems": ["string"],
