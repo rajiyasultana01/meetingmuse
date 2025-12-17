@@ -34,9 +34,9 @@ export const uploadMeeting = async (
     // Construct URL dynamically based on server environment
     let baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    // Force Render URL in production to avoid localhost issues behind proxy
-    if (process.env.NODE_ENV === 'production') {
-      baseUrl = 'https://meetingmuse-backend.onrender.com';
+    // Force Production URL if available, otherwise fallback to request host
+    if (process.env.NODE_ENV === 'production' && process.env.PUBLIC_URL) {
+      baseUrl = process.env.PUBLIC_URL;
     }
 
     const videoUrl = `${baseUrl}/uploads/${req.file.filename}`;
@@ -94,9 +94,9 @@ export const uploadMeetingFromExtension = async (
     // Construct URL dynamically based on server environment
     let baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    // Force Render URL in production to avoid localhost issues behind proxy
-    if (process.env.NODE_ENV === 'production') {
-      baseUrl = 'https://meetingmuse-backend.onrender.com';
+    // Force Production URL if available, otherwise fallback to request host
+    if (process.env.NODE_ENV === 'production' && process.env.PUBLIC_URL) {
+      baseUrl = process.env.PUBLIC_URL;
     }
 
     const videoUrl = `${baseUrl}/uploads/${req.file.filename}`;
@@ -153,9 +153,9 @@ export const uploadMeetingFromExtensionAuth = async (
     // Construct URL dynamically based on server environment
     let baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    // Force Render URL in production to avoid localhost issues behind proxy
-    if (process.env.NODE_ENV === 'production') {
-      baseUrl = 'https://meetingmuse-backend.onrender.com';
+    // Force Production URL if available, otherwise fallback to request host
+    if (process.env.NODE_ENV === 'production' && process.env.PUBLIC_URL) {
+      baseUrl = process.env.PUBLIC_URL;
     }
 
     const videoUrl = `${baseUrl}/uploads/${req.file.filename}`;

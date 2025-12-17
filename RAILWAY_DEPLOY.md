@@ -28,6 +28,7 @@ Railway is an excellent platform for deploying this monorepo project. Follow the
         *   `FIREBASE_CLIENT_EMAIL`: (From firebase-service-account.json)
         *   `GROQ_API_KEY`: (Your Groq API Key)
         *   `API_SECRET_KEY`: (A random secure string for your internal API security)
+        *   `PUBLIC_URL`: `https://<YOUR-BACKEND-URL>.up.railway.app` (The domain you generate in step 5)
         *   `CORS_ORIGIN`: `https://<YOUR-FRONTEND-URL>.up.railway.app` (You will update this after deploying the frontend).
 5.  **Networking**:
     *   Go to **Settings** and generate a **Public Domain** (e.g., `meetingmuse-backend-production.up.railway.app`).
