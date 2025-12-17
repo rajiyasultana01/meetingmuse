@@ -75,6 +75,7 @@ export const authenticateUser = async (
     let user = await User.findOne({ firebaseUid: decodedToken.uid });
 
     // If user doesn't exist in DB, create them (only for Firebase flows usually)
+    // If user doesn't exist in DB, create them (only for Firebase flows usually)
     if (!user) {
       // For extension token, we expect user to already exist (since we created token from user)
       // But if somehow missing, we error out or handle it
@@ -83,13 +84,27 @@ export const authenticateUser = async (
         return;
       }
 
-      user = await User.create({
-        firebaseUid: decodedToken.uid,
-        email: decodedToken.email,
-        displayName: decodedToken.name || decodedToken.email?.split('@')[0],
-        photoURL: decodedToken.picture,
-        role: 'user',
-      });
+      // Check if user exists with the same email
+      if (decodedToken.email) {
+        user = await User.findOne({ email: decodedToken.email.toLowerCase() });
+
+        if (user) {
+          // Link the new Firebase UID to existing user
+          user.firebaseUid = decodedToken.uid;
+          await user.save();
+        }
+      }
+
+      // If still no user, create a new one
+      if (!user) {
+        user = await User.create({
+          firebaseUid: decodedToken.uid,
+          email: decodedToken.email,
+          displayName: decodedToken.name || decodedToken.email?.split('@')[0],
+          photoURL: decodedToken.picture,
+          role: 'user',
+        });
+      }
     }
 
     // Attach user info to request

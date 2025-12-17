@@ -6,18 +6,20 @@ const groq = new Groq({
 
 export interface SummaryResult {
   summary: string;
+  deepDiveSummary?: string;
   keyPoints: string[];
   actionItems: string[];
   topics: string[];
   participants?: string[];
   sentiment?: 'positive' | 'neutral' | 'negative';
+  coachingTips?: string[];
 }
 
 export const generateSummary = async (transcript: string): Promise<SummaryResult> => {
   try {
     console.log('Generating summary with Groq...');
 
-    const prompt = `You are an expert meeting analyst. Analyze the following meeting transcript and provide a COMPREHENSIVE and DETAILED summary that captures ALL important discussions, decisions, and context.
+    const prompt = `You are an expert meeting analyst. Analyze the following meeting transcript and provide a COMPREHENSIVE report.
 
 Transcript:
 """
@@ -25,39 +27,33 @@ ${transcript}
 """
 
 Please provide:
-1. A DETAILED and COMPREHENSIVE summary that covers:
-   - The main purpose and context of the meeting
-   - ALL key discussions in chronological order
-   - All important points raised by participants
-   - Any decisions made or conclusions reached
-   - Background information and context provided
-   - Examples, data, or specifics mentioned
-   - Any concerns, questions, or challenges discussed
-   - The length should be proportional to the meeting content (aim for thorough coverage, not brevity)
+1. A CONCISE summary (max 300 words) that captures the main purpose and key decisions. This should be suitable for a quick read.
 
 2. Key points discussed (comprehensive list, not just highlights)
 3. Action items identified (with responsible parties if mentioned, deadlines if specified)
 4. Main topics covered (all topics, not just major ones)
 5. Overall sentiment (positive, neutral, or negative)
 6. Participants mentioned (if any)
-
-IMPORTANT: The summary should be detailed enough that someone who didn't attend the meeting can understand everything that was discussed. Do not omit important details for the sake of brevity.
+7. Coaching tips: Provide 3-5 constructive suggestions for the meeting participants or organizer to improve future meetings (e.g. regarding clarity, engagement, time management, structure, conflict resolution).
+8. A DETAILED DEEP-DIVE SUMMARY: A comprehensive, detailed narrative of the entire meeting, covering all discussions in depth. This should be much longer and more detailed than the concise summary, serving as a full record of the discussion logic and details.
 
 Format your response as JSON with the following structure:
 {
-  "summary": "string (detailed, multiple paragraphs covering all discussions)",
+  "summary": "string (concise, max 300 words)",
+  "deepDiveSummary": "string (detailed, long narrative)",
   "keyPoints": ["string"],
   "actionItems": ["string"],
   "topics": ["string"],
   "participants": ["string"],
-  "sentiment": "positive|neutral|negative"
+  "sentiment": "positive|neutral|negative",
+  "coachingTips": ["string"]
 }`;
 
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: 'system',
-          content: 'You are an expert meeting analyst. Always respond with valid JSON. Provide detailed, comprehensive summaries that capture all important information.',
+          content: 'You are an expert meeting analyst. Always respond with valid JSON.',
         },
         {
           role: 'user',
@@ -80,20 +76,24 @@ Format your response as JSON with the following structure:
       const result = JSON.parse(content);
       return {
         summary: result.summary || '',
+        deepDiveSummary: result.deepDiveSummary || result.summary || '', // Fallback to normal summary if missing
         keyPoints: result.keyPoints || [],
         actionItems: result.actionItems || [],
         topics: result.topics || [],
         participants: result.participants || [],
         sentiment: result.sentiment || 'neutral',
+        coachingTips: result.coachingTips || [],
       };
     } catch (parseError) {
       // Fallback if JSON parsing fails
       return {
         summary: content,
+        deepDiveSummary: content,
         keyPoints: [],
         actionItems: [],
         topics: [],
         sentiment: 'neutral',
+        coachingTips: [],
       };
     }
   } catch (error: any) {

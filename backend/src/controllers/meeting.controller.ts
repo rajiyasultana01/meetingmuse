@@ -202,7 +202,20 @@ export const getMeetings = async (
 
     const { status, source, limit = 20, offset = 0 } = req.query;
 
-    const query: any = { userId: user._id };
+    const query: any = {};
+
+    // Admin check
+    if (user.role === 'admin') {
+      // If admin and userId query provided, filter by it
+      if (req.query.userId) {
+        query.userId = req.query.userId;
+      }
+      // Otherwise show all (no userId filter)
+    } else {
+      // Regular user: force userId filter
+      query.userId = user._id;
+    }
+
     if (status) {
       query.status = status;
     }
@@ -213,7 +226,8 @@ export const getMeetings = async (
     const meetings = await Meeting.find(query)
       .sort({ createdAt: -1 })
       .limit(Number(limit))
-      .skip(Number(offset));
+      .skip(Number(offset))
+      .populate('userId', 'email displayName photoURL');
 
     const total = await Meeting.countDocuments(query);
 
@@ -241,10 +255,14 @@ export const getMeetingById = async (
       return;
     }
 
-    const meeting = await Meeting.findOne({
-      _id: id,
-      userId: user._id,
-    });
+    const query: any = { _id: id };
+
+    // Only restrict by userId if NOT admin
+    if (user.role !== 'admin') {
+      query.userId = user._id;
+    }
+
+    const meeting = await Meeting.findOne(query);
 
     if (!meeting) {
       res.status(404).json({ error: 'Meeting not found' });
@@ -276,10 +294,12 @@ export const getMeetingById = async (
       summary: summary
         ? {
           summaryText: summary.summaryText,
+          deepDiveSummary: summary.deepDiveSummary,
           keyPoints: summary.keyPoints,
           actionItems: summary.actionItems,
           topics: summary.topics,
           participants: summary.participants,
+          coachingTips: summary.coachingTips,
           sentiment: summary.sentiment,
         }
         : null,
@@ -309,10 +329,14 @@ export const deleteMeeting = async (
       return;
     }
 
-    const meeting = await Meeting.findOne({
-      _id: id,
-      userId: user._id,
-    });
+    const query: any = { _id: id };
+
+    // Only restrict by userId if NOT admin
+    if (user.role !== 'admin') {
+      query.userId = user._id;
+    }
+
+    const meeting = await Meeting.findOne(query);
 
     if (!meeting) {
       res.status(404).json({ error: 'Meeting not found' });

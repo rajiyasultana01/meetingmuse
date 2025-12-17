@@ -16,14 +16,8 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Fix DNS resolution issues by forcing Google DNS
-import dns from 'dns';
-try {
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
-  console.log('✅ Applied DNS Fix: Forced Google DNS');
-} catch (e) {
-  console.error('❌ Failed to apply DNS fix:', e);
-}
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

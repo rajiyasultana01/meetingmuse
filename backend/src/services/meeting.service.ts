@@ -19,11 +19,11 @@ export const processMeetingVideo = async (
       status: 'transcribing',
     });
 
-    // Step 0: Skip MP4 conversion (Direct Gemini Processing)
-    // We use the original file to avoid FFmpeg usage.
+    // Step 0: Prepare for processing
+    // We use the original file. Transcription service will handle audio extraction.
     const finalVideoPath = localVideoPath;
 
-    // Step 1: Transcribe video (using Gemini)
+    // Step 1: Transcribe video (using Groq Whisper)
     const transcriptionResult = await transcribeVideo(finalVideoPath);
 
     // Step 2: Save raw transcript
@@ -53,10 +53,12 @@ export const processMeetingVideo = async (
       meetingId,
       transcriptId: transcript._id,
       summaryText: summaryResult.summary,
+      deepDiveSummary: summaryResult.deepDiveSummary,
       keyPoints: summaryResult.keyPoints,
       actionItems: summaryResult.actionItems,
       topics: summaryResult.topics,
       participants: summaryResult.participants || [],
+      coachingTips: summaryResult.coachingTips || [],
       sentiment: summaryResult.sentiment || 'neutral',
     });
 

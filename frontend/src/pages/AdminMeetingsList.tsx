@@ -13,11 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import axios from "axios";
+import api from "@/services/api";
 import { format } from "date-fns";
 
-const envApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_URL = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
+// Removed const envApiUrl... as api service handles base URL
 
 interface Meeting {
   _id: string;
@@ -26,6 +25,11 @@ interface Meeting {
   duration?: string;
   status: string;
   firebaseUid: string;
+  userId: {
+    email: string;
+    displayName?: string;
+    photoURL?: string;
+  };
 }
 
 export default function AdminMeetingsList() {
@@ -41,12 +45,8 @@ export default function AdminMeetingsList() {
     try {
       setLoading(true);
       // Admin endpoint to get all meetings
-      const token = await (window as any).firebaseAuth?.currentUser?.getIdToken();
-      const response = await axios.get(`${API_URL}/admin/meetings`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      // Backend now supports admins fetching all meetings at /meetings
+      const response = await api.get('/meetings');
       setMeetings(response.data.meetings || []);
     } catch (error) {
       console.error("Failed to fetch meetings:", error);
@@ -60,12 +60,7 @@ export default function AdminMeetingsList() {
     if (!confirm("Are you sure you want to delete this meeting?")) return;
 
     try {
-      const token = await (window as any).firebaseAuth?.currentUser?.getIdToken();
-      await axios.delete(`${API_URL}/meetings/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await api.delete(`/meetings/${id}`);
       fetchMeetings(); // Refresh list
     } catch (error) {
       console.error("Failed to delete meeting:", error);
@@ -96,6 +91,7 @@ export default function AdminMeetingsList() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead>Meeting Title</TableHead>
+                    <TableHead>User</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Duration</TableHead>
                     <TableHead>Status</TableHead>
@@ -110,6 +106,12 @@ export default function AdminMeetingsList() {
                       onClick={() => navigate(`/admin/meetings/${meeting._id}`)}
                     >
                       <TableCell className="font-medium">{meeting.title}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{meeting.userId?.displayName || 'Unknown'}</span>
+                          <span className="text-xs text-muted-foreground">{meeting.userId?.email}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>{format(new Date(meeting.createdAt), 'MMM d, yyyy')}</TableCell>
                       <TableCell>{meeting.duration || 'N/A'}</TableCell>
                       <TableCell>

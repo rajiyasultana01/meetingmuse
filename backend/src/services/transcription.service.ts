@@ -1,103 +1,88 @@
 import fs from 'fs';
 import path from 'path';
-import dns from 'dns';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleAIFileManager, FileState } from '@google/generative-ai/server';
+import Groq from 'groq-sdk';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 
-// Fix DNS resolution issues by forcing Google DNS (useful for Render)
-try {
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
-} catch (e) {
-  console.error('Failed to apply DNS fix in transcription service:', e);
-}
+// Set FFmpeg path
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
+// Initialize Groq
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 export interface TranscriptionResult {
   text: string;
   language?: string;
 }
 
-const getMimeType = (filePath: string): string => {
-  const ext = path.extname(filePath).toLowerCase();
-  if (ext === '.mp4') return 'video/mp4';
-  if (ext === '.webm') return 'video/webm';
-  if (ext === '.mov') return 'video/quicktime';
-  return 'video/mp4'; // Default fallback
+/**
+ * Extracts audio from a video file and saves it as a temporary MP3 file.
+ * Uses low bitrate to keep file size small for API limits.
+ */
+const extractAudio = (videoPath: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const audioPath = videoPath.replace(path.extname(videoPath), '.mp3');
+
+    console.log(`Extracting audio from ${videoPath} to ${audioPath}...`);
+
+    ffmpeg(videoPath)
+      .toFormat('mp3')
+      .audioBitrate('32k') // Low bitrate for speech is usually fine & saves space
+      .audioChannels(1)    // Mono
+      .on('end', () => {
+        console.log('Audio extraction complete.');
+        resolve(audioPath);
+      })
+      .on('error', (err) => {
+        console.error('FFmpeg error:', err);
+        reject(err);
+      })
+      .save(audioPath);
+  });
 };
 
 export const transcribeVideo = async (videoPath: string): Promise<TranscriptionResult> => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is missing. FFmpeg fallback has been disabled. Please add the Gemini key to Render.");
-  }
-
-  console.log('Starting Gemini transcription (Lightweight Mode)...');
-
-  const fileManager = new GoogleAIFileManager(apiKey);
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  let audioPath: string | null = null;
 
   try {
-    // 1. Upload File
-    console.log('Uploading video to Gemini...');
-    const uploadResult = await fileManager.uploadFile(videoPath, {
-      mimeType: getMimeType(videoPath),
-      displayName: path.basename(videoPath),
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY is missing.");
+    }
+
+    // 1. Extract Audio
+    audioPath = await extractAudio(videoPath);
+
+    // 2. Transcribe with Groq
+    console.log('Sending audio to Groq Whisper...');
+
+    const transcription = await groq.audio.transcriptions.create({
+      file: fs.createReadStream(audioPath),
+      model: "whisper-large-v3",
+      response_format: "json", // or "verbose_json" for timestamps
+      temperature: 0.0,
     });
 
-    const fileUri = uploadResult.file.uri;
-    console.log(`Uploaded file: ${fileUri}`);
-
-    // 2. Wait for Processing
-    let file = await fileManager.getFile(uploadResult.file.name);
-    while (file.state === FileState.PROCESSING) {
-      console.log('Gemini processing video...');
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // Check every 5s
-      file = await fileManager.getFile(uploadResult.file.name);
-    }
-
-    if (file.state === FileState.FAILED) {
-      throw new Error("Gemini video processing failed.");
-    }
-
-    console.log('Video processed. Generating transcript...');
-
-    // 3. Generate Transcript
-    const prompt = `Transcribe this meeting video word-for-word. 
-    Provide the full transcript. 
-    If there are multiple speakers, label them as Speaker 1, Speaker 2, etc. 
-    Do not add any markdown formatting like **bold** or headers, just the plain text transcript.`;
-
-    const result = await model.generateContent([
-      {
-        fileData: {
-          mimeType: file.mimeType,
-          fileUri: fileUri,
-        },
-      },
-      prompt,
-    ]);
-
-    const response = await result.response;
-    const text = response.text();
-
-    console.log('Gemini transcription complete.');
-
-    // Cleanup: Delete file from Gemini immediately
-    try {
-      await fileManager.deleteFile(uploadResult.file.name);
-      console.log('Deleted temporary Gemini file.');
-    } catch (e) {
-      console.warn('Failed to delete Gemini file:', e);
-    }
+    console.log('Groq transcription complete.');
 
     return {
-      text: text,
-      language: 'en',
+      text: transcription.text,
+      language: 'en', // Groq auto-detects, but broadly we assume/enforce en usage context or could parse from verbose_json
     };
 
   } catch (error: any) {
-    console.error('Gemini Transcription Error:', error);
-    throw new Error(`Gemini Transcription failed: ${error.message}`);
+    console.error('Groq Transcription Error:', error);
+    throw new Error(`Groq Transcription failed: ${error.message}`);
+  } finally {
+    // Cleanup audio file
+    if (audioPath && fs.existsSync(audioPath)) {
+      try {
+        fs.unlinkSync(audioPath);
+      } catch (e) {
+        console.warn('Failed to delete temp audio file:', e);
+      }
+    }
   }
 };
 

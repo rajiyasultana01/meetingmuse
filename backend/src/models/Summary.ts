@@ -4,10 +4,12 @@ export interface ISummary extends Document {
   meetingId: Types.ObjectId;
   transcriptId: Types.ObjectId;
   summaryText: string;
+  deepDiveSummary?: string;
   keyPoints: string[];
   actionItems: string[];
   topics: string[];
   participants: string[];
+  coachingTips?: string[];
   sentiment: 'positive' | 'neutral' | 'negative';
   createdAt: Date;
   updatedAt: Date;
@@ -31,6 +33,9 @@ const SummarySchema = new Schema<ISummary>(
       type: String,
       required: true,
     },
+    deepDiveSummary: {
+      type: String,
+    },
     keyPoints: {
       type: [String],
       default: [],
@@ -44,6 +49,10 @@ const SummarySchema = new Schema<ISummary>(
       default: [],
     },
     participants: {
+      type: [String],
+      default: [],
+    },
+    coachingTips: {
       type: [String],
       default: [],
     },

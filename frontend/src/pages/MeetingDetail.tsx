@@ -235,6 +235,9 @@ export default function MeetingDetail() {
         {meeting.status === 'completed' && summary && transcript && (
           <MeetingReport
             summary={summary.summaryText || summary.summary_text} // Support both for now if needed, but prefer camelCase
+            deepDiveSummary={summary.deepDiveSummary || ''}
+            keyPoints={summary.keyPoints || []}
+            coachingTips={summary.coachingTips || []}
             actionItems={summary.actionItems?.map((item: string) => ({
               time: '0:00',
               description: item
