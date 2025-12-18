@@ -11,6 +11,7 @@ export interface ISummary extends Document {
   participants: string[];
   coachingTips?: string[];
   sentiment: 'positive' | 'neutral' | 'negative';
+  sentimentReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,6 +61,9 @@ const SummarySchema = new Schema<ISummary>(
       type: String,
       enum: ['positive', 'neutral', 'negative'],
       default: 'neutral',
+    },
+    sentimentReason: {
+      type: String,
     },
   },
   {

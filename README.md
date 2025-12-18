@@ -6,98 +6,62 @@ Transform your meeting recordings into actionable insights with AI-powered trans
 
 ## Features
 
-- **AI-Powered Transcription** - Automatic speech-to-text using OpenAI Whisper
-- **Intelligent Summarization** - Generate comprehensive summaries with Groq LLaMA 3.3
+- **AI-Powered Transcription** - Automatic speech-to-text using Groq Whisper Large V3
+- **Intelligent Summarization** - Generate comprehensive summaries with OpenAI GPT-4o Mini
 - **Dual Upload Methods**
-  - **Web Interface**: Monitor and manage meetings.
-  - **Chrome Extension (LexEye)**: Automatically record and upload directly from Google Meet, Zoom, and Teams.
+  - **Web Interface**: Monitor and manage meetings
+  - **Chrome Extension (LexEye)**: Automatically record and upload directly from Google Meet, Zoom, and Teams
 - **Smart Insights**
+  - Executive Summary & Deep-Dive Analysis
   - Action Items Extraction
   - Key Points & Statistics
   - Sentiment Analysis
   - Participant Tracking
+  - Coaching Tips
 - **Robust Architecture**
-  - **Dual Authentication**: Secure Firebase Login for Web + Custom JWT implementation for Extension communication.
-  - **Resilient Storage**: Automatic fallback to local storage if Cloud Storage fails.
-  - **Real-time Status**: Track uploading, transcribing, and processing states.
+  - **Dual Authentication**: Secure Firebase Login for Web + Custom JWT for Extension
+  - **Resilient Storage**: Automatic fallback to local storage if Cloud Storage fails
+  - **Real-time Status**: Track uploading, transcribing, and processing states
 
 ## Tech Stack
 
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS, Shadcn UI
-<<<<<<< HEAD
-- **Backend**: Node.js, Express, MongoDB
-- **Authentication**: Firebase Auth
-- **Storage**: Firebase Storage
-- **AI Services**:
-  - OpenAI Whisper API (transcription)
-  - Groq API with LLaMA 3.3 70B (summarization)
-- **Deployment**: MongoDB Atlas (database), Firebase (auth/storage), Vercel/Netlify (frontend), any Node.js host (backend)
-=======
 - **Backend**: Node.js, Express, MongoDB (Mongoose)
 - **Authentication**: Firebase Auth (Frontend), Custom JWT (Backend-Extension)
 - **AI Services**:
-  - OpenAI Whisper API (Transcription)
-  - Groq API (Summarization)
+  - Groq Whisper Large V3 (Transcription)
+  - OpenAI GPT-4o Mini (Summarization)
 - **Storage**: Firebase Storage (Primary), Local Filesystem (Fallback)
->>>>>>> 9b86033 (Cleanup documentation and fix frontend meeting details)
+- **Video Processing**: FFmpeg
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-<<<<<<< HEAD
 - MongoDB (local or MongoDB Atlas)
-- Firebase account (for Auth and Storage)
-- OpenAI API key
-- Groq API key (free tier available)
-=======
-- MongoDB (Running locally or Atlas URI)
 - FFmpeg (Installed and added to PATH)
-- Firebase Project (Project ID, Service Account)
-- OpenAI API Key
->>>>>>> 9b86033 (Cleanup documentation and fix frontend meeting details)
+- Firebase account (for Auth and Storage)
+- Groq API key (free tier available)
 
 ### 1. Backend Setup
 
 ```bash
-<<<<<<< HEAD
-# Clone the repository
-git clone <your-repo-url>
-cd meeting_muse
-
-# Install backend dependencies
 cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
 npm install
 ```
 
-### Backend Setup
-
-1. **Configure MongoDB:**
-   - Create a MongoDB Atlas account at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-   - Create a new cluster
-   - Get your connection string
-
-2. **Configure Firebase:**
-   - Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
-   - Enable Authentication (Email/Password provider)
-   - Enable Cloud Storage
-   - Generate a service account key (Settings → Service Accounts → Generate new private key)
-
-3. **Create `backend/.env` file:**
+Create `backend/.env` file:
 ```bash
 PORT=5000
 NODE_ENV=development
 
-MONGODB_URI=your-mongodb-connection-string
+MONGODB_URI=mongodb://localhost:27017/meetingmuse
+# OR for MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/meetingmuse
 
 API_SECRET_KEY=your-random-secret-key
-OPENAI_API_KEY=your-openai-api-key
 GROQ_API_KEY=your-groq-api-key
+OPENAI_API_KEY=your-openai-api-key
 CORS_ORIGIN=http://localhost:8080
 
 FIREBASE_PROJECT_ID=your-project-id
@@ -105,158 +69,115 @@ FIREBASE_CLIENT_EMAIL=your-service-account-email
 FIREBASE_PRIVATE_KEY="your-private-key"
 ```
 
-4. **Start the backend server:**
+Start the backend server:
 ```bash
-cd backend
 npm run dev
 ```
 
 Backend will run on `http://localhost:5000`
-
-### Frontend Setup
-
-1. **Configure Firebase in frontend:**
-   - Copy your Firebase config from Firebase Console → Project Settings → General
-
-2. **Create `frontend/.env` file:**
-```bash
-VITE_API_URL=http://localhost:5000/api
-=======
-cd backend
-npm install
-
-# Create .env file
-# PORT=5000
-# MONGODB_URI=mongodb://localhost:27017/meetingmuse
-# FIREBASE_PROJECT_ID=your-project-id
-# OPENAI_API_KEY=sk-...
-# GROQ_API_KEY=gsk_...
-# API_SECRET_KEY=your-secret-key-for-extension
-
-npm run dev
-```
 
 ### 2. Frontend Setup
 
 ```bash
 cd frontend
 npm install
-npm run dev
->>>>>>> 9b86033 (Cleanup documentation and fix frontend meeting details)
 ```
+
+Create `frontend/.env` file:
+```bash
+VITE_API_URL=http://localhost:5000/api
+```
+
+Update Firebase config in `frontend/src/config/firebase.ts` with your Firebase credentials.
+
+Start the frontend:
+```bash
+npm run dev
+```
+
 Access the dashboard at `http://localhost:8080`.
 
-<<<<<<< HEAD
-3. **Update Firebase config:**
-   - Edit `frontend/src/config/firebase.ts` with your Firebase credentials
-
-4. **Start the frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-Frontend will be available at `http://localhost:8080` (or 8081 if 8080 is in use)
-=======
 ### 3. Extension Setup (LexEye)
 
-1. Open Chrome and navigate to `chrome://extensions`.
-2. Enable "Developer mode".
-3. Click "Load unpacked" and select the `LexEye` directory.
-4. Pin the extension.
-5. Log in using your MeetingMuse credentials.
+1. Open Chrome and navigate to `chrome://extensions`
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select the `LexEye` directory
+4. Pin the extension
+5. Log in using your MeetingMuse credentials
 
 ## Architecture Highlights
 
 ### Dual Authentication System
 The system uses a hybrid authentication approach:
-- **Web Frontend**: Uses Standard Firebase ID Tokens.
-- **Browser Extension**: Uses a custom backend-signed JWT mechanism to allow secure background uploads without persistent Firebase SDK instances in content scripts.
->>>>>>> 9b86033 (Cleanup documentation and fix frontend meeting details)
+- **Web Frontend**: Uses Standard Firebase ID Tokens
+- **Browser Extension**: Uses a custom backend-signed JWT mechanism to allow secure background uploads without persistent Firebase SDK instances in content scripts
 
 ### Storage Fallback
 To ensure no recording is ever lost:
-1. The system attempts to upload to Firebase Storage.
-2. If network/config fails, it automatically saves the file to the local server (`backend/uploads`).
-3. The video remains accessible via a local static URL.
-
-<<<<<<< HEAD
-### User Upload
-
-1. Sign up / Login
-2. Navigate to "Summarize Meeting"
-3. Upload a meeting video (MP4, MOV, AVI - max 100MB)
-4. Wait for processing (2-5 minutes typically)
-5. View transcript, summary, action items, and insights
-
-### External API Integration
-
-Integrate with screen recording software or Chrome extensions to automatically process recordings.
-
-**Endpoint:**
-```
-POST http://your-backend-url:5000/api/external/receive-recording
-```
-
-**Headers:**
-```
-Content-Type: application/json
-x-api-key: YOUR_API_SECRET_KEY
-```
-
-**Request Body (Base64):**
-```json
-{
-  "video": "base64_encoded_video",
-  "fileName": "meeting.mp4",
-  "title": "Team Standup",
-  "userId": "firebase-user-id",
-  "metadata": {
-    "duration": 1800,
-    "participants": ["Alice", "Bob"]
-  }
-}
-```
-
-**Request Body (URL):**
-```json
-{
-  "videoUrl": "https://example.com/recording.mp4",
-  "fileName": "meeting.mp4",
-  "title": "Sprint Planning",
-  "userId": "firebase-user-id"
-}
-```
-
-See [API_INTEGRATION.md](./API_INTEGRATION.md) for detailed API documentation.
+1. The system attempts to upload to Firebase Storage
+2. If network/config fails, it automatically saves the file to the local server (`backend/uploads`)
+3. The video remains accessible via a local static URL
 
 ## Processing Pipeline
 
 1. **Upload** - Video uploaded to Firebase Storage and saved locally
-2. **Transcription** - OpenAI Whisper extracts speech-to-text
-3. **Cleaning** - Remove filler words, fix formatting
-4. **Summarization** - Groq LLaMA generates:
-   - Meeting summary
-   - Key points discussed
-   - Action items with owners
-   - Main topics
-   - Sentiment analysis
+2. **Extract Audio** - FFmpeg extracts audio from video (MP3, 32kbps, mono)
+3. **Transcription** - Groq Whisper Large V3 converts speech to text
+4. **Cleaning** - Remove filler words, fix formatting, remove duplicates
+5. **Summarization** - OpenAI GPT-4o Mini generates:
+   - Executive summary (500-800 words) - comprehensive high-level overview
+   - Detailed deep-dive summary (1500-3000 words) - complete meeting record
+   - Key points discussed (with context)
+   - Action items (with who, what, when, why)
+   - Main topics (all topics covered)
+   - Sentiment analysis (with reasoning)
    - Participant mentions
-5. **Storage** - Save to MongoDB
-6. **Display** - Present in user dashboard
+   - Coaching tips (5-8 actionable suggestions)
+6. **Storage** - Save to MongoDB
+7. **Display** - Present in user dashboard
+
+**Meeting Status Flow:**
+```
+uploaded → processing → transcribing → summarizing → completed
+                                                    ↓
+                                                 failed
+```
+
+## API Keys Setup
+
+### Groq API (Transcription)
+1. Visit [console.groq.com](https://console.groq.com)
+2. Create API key
+3. Free tier available (60 requests/minute)
+
+### OpenAI API (Summarization)
+1. Visit [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Create API key
+3. Cost: ~$0.15 per 1M input tokens, ~$0.60 per 1M output tokens (GPT-4o Mini)
+
+### Firebase
+1. Create project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable Authentication (Email/Password)
+3. Enable Cloud Storage
+4. Generate service account key (Settings → Service Accounts)
+
+### API Secret
+Generate a secure random string:
+```bash
+openssl rand -base64 32
+```
+
+## Cost Estimates
+
+For a 30-minute meeting:
+- **Transcription**: ~$0.18 (Groq Whisper)
+- **Summarization**: ~$0.05-0.08 (OpenAI GPT-4o Mini with detailed summaries)
+- **Total**: ~$0.23-0.26 per meeting
 
 ## Project Structure
 
 ```
-meeting_muse/
-├── frontend/               # React frontend
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page components
-│   │   ├── lib/           # API client & utilities
-│   │   ├── config/        # Firebase configuration
-│   │   └── hooks/         # Custom React hooks
-│   └── public/
+meetingmuse/
 ├── backend/               # Node.js/Express backend
 │   ├── src/
 │   │   ├── controllers/   # Request handlers
@@ -265,10 +186,20 @@ meeting_muse/
 │   │   ├── services/      # Business logic (AI, storage)
 │   │   ├── middleware/    # Auth & error handling
 │   │   └── config/        # Database & Firebase config
-│   └── uploads/           # Temporary video storage
-├── SETUP.md              # Detailed setup guide
-├── API_INTEGRATION.md    # API documentation
-└── README.md             # This file
+│   └── uploads/           # Local video storage (fallback)
+├── frontend/              # React SPA
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # Page components
+│   │   ├── lib/           # API client & utilities
+│   │   ├── config/        # Firebase configuration
+│   │   └── hooks/         # Custom React hooks
+│   └── dist/              # Production build
+└── LexEye/               # Chrome Extension
+    ├── manifest.json      # Extension manifest
+    ├── background.js     # Service worker
+    ├── content.js        # Meeting detection & recording
+    └── popup.html/js     # Extension UI
 ```
 
 ## Database Schema (MongoDB)
@@ -280,48 +211,7 @@ meeting_muse/
 - `summaries` - AI-generated summaries with extracted insights
 - `meetinganalytics` - View/share/download tracking
 
-**Meeting Status Flow:**
-```
-uploaded → processing → transcribing → summarizing → completed
-                                                    ↓
-                                                 failed
-```
-
-## API Keys Setup
-
-### OpenAI (Whisper)
-1. Visit [platform.openai.com](https://platform.openai.com)
-2. Create API key
-3. Cost: ~$0.006/minute
-
-### Groq (LLaMA)
-1. Visit [console.groq.com](https://console.groq.com)
-2. Create API key
-3. Free tier available
-
-### API Secret
-Generate a secure random string:
-```bash
-openssl rand -base64 32
-```
-
-Add all to your backend `.env` file:
-```bash
-OPENAI_API_KEY=sk-...
-GROQ_API_KEY=gsk_...
-API_SECRET_KEY=your-secret
-```
-
-## Cost Estimates
-
-For a 30-minute meeting:
-- **Transcription**: ~$0.18 (Whisper)
-- **Summarization**: Free tier or ~$0.02 (Groq)
-- **Total**: ~$0.20 per meeting
-
 ## Development
-
-### Run Locally
 
 ```bash
 # Backend
@@ -333,7 +223,7 @@ cd frontend
 npm run dev
 ```
 
-### Build for Production
+## Build for Production
 
 ```bash
 # Frontend
@@ -343,27 +233,12 @@ npm run build
 # Backend
 cd backend
 npm run build
+npm start
 ```
 
 ## Deployment
 
-### Frontend
-Deploy to Vercel or Netlify:
-```bash
-cd frontend
-npm run build
-# Deploy dist/ folder
-```
-
-### Backend
-Deploy to any Node.js hosting platform (Heroku, Railway, DigitalOcean, etc.):
-```bash
-cd backend
-npm run build
-npm start
-```
-
-Configure environment variables in your hosting platform's dashboard.
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed deployment instructions.
 
 ## Features Roadmap
 
@@ -382,26 +257,24 @@ Configure environment variables in your hosting platform's dashboard.
 
 ### Videos not processing
 - Check backend server logs
-- Verify OpenAI and Groq API keys are set correctly
-- Ensure video format is supported
+- Verify GROQ_API_KEY and OPENAI_API_KEY are set correctly
+- Ensure FFmpeg is installed and in PATH
 - Check MongoDB connection
 
 ### Database connection errors
-- Verify MongoDB URI in backend `.env`
+- Verify MONGODB_URI in backend `.env`
 - Check if MongoDB Atlas allows connections from your IP
-- Ensure MongoDB cluster is running
+- Ensure MongoDB is running
 
-### API authentication fails
-- Verify `x-api-key` header matches backend `.env`
-- Check Firebase Auth token is valid
-- Ensure user exists in MongoDB
+### Extension login fails
+- Ensure backend is running
+- Check CORS settings in backend
+- Verify `localhost:5000` is reachable
 
 ### Firebase errors
 - Verify Firebase credentials in backend `.env`
 - Check Firebase project settings
 - Ensure Storage and Auth are enabled
-
-See [SETUP.md](./SETUP.md) for detailed troubleshooting.
 
 ## Security
 
@@ -412,24 +285,9 @@ See [SETUP.md](./SETUP.md) for detailed troubleshooting.
 - External API requires secret key authentication
 - Videos stored in Firebase Storage with proper access control
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
 ## License
 
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions:
-- Check [SETUP.md](./SETUP.md) for setup help
-- Review [API_INTEGRATION.md](./API_INTEGRATION.md) for API docs
-- Open an issue on GitHub
+MIT License
 
 ## Acknowledgments
 
@@ -437,31 +295,9 @@ For issues and questions:
 - Backend powered by [Node.js](https://nodejs.org) + [Express](https://expressjs.com)
 - Database by [MongoDB](https://www.mongodb.com)
 - Auth & Storage by [Firebase](https://firebase.google.com)
-- AI by [OpenAI](https://openai.com) and [Groq](https://groq.com)
+- AI by [Groq](https://groq.com) (Transcription) and [OpenAI](https://openai.com) (Summarization)
 - UI components by [Shadcn](https://ui.shadcn.com)
 
 ---
 
 **Made with ❤️ for better meetings**
-=======
-### API Processing Pipeline
-1. **Receive**: Video uploaded via Stream/File.
-2. **Transcribe**: Audio extracted via FFmpeg -> OpenAI Whisper.
-3. **Summarize**: Transcript cleaned -> Groq LLaMA 3.3.
-4. **Persist**: Results saved to MongoDB.
-
-## Development
-
-- **Backend Logs**: Check the backend terminal for detailed processing logs (`[Auth]`, `[Upload]`, `Processing meeting...`).
-- **Local Videos**: Stored in `backend/uploads/` if cloud upload fails.
-
-## Troubleshooting
-
-- **"Processing in progress..."**: The backend is running FFmpeg/OpenAI tasks. This can take 1-5 minutes depending on video length.
-- **Login fails in Extension**: Ensure the backend is running and `localhost` SSL/CORS is allowed.
-- **Extension "Network Error"**: Check if `localhost:5000` is reachable.
-
-## License
-
-MIT License.
->>>>>>> 9b86033 (Cleanup documentation and fix frontend meeting details)

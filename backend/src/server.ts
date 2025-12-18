@@ -16,9 +16,6 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Load environment variables
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 

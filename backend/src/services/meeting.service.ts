@@ -60,6 +60,7 @@ export const processMeetingVideo = async (
       participants: summaryResult.participants || [],
       coachingTips: summaryResult.coachingTips || [],
       sentiment: summaryResult.sentiment || 'neutral',
+      sentimentReason: summaryResult.sentimentReason || '',
     });
 
     // Step 6: Create analytics record
